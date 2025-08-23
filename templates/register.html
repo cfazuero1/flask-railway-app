@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+    <h1>Create Your Account</h1>
+    <p>Join Hacker Escape Room and start solving challenges!</p>
+</section>
+
+<div class="container">
+    <form method="POST" action="{{ url_for('register') }}" style="max-width: 400px; margin:auto;">
+        <label>Username<br><input name="username" required></label><br><br>
+        <label>Password<br><input name="password" type="password" required></label><br><br>
+        <button type="submit">Register</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+    <h1>Welcome to the Hacker Escape Room</h1>
+    <p>Crack the puzzles. Capture the flags. Prove your skills.</p>
+    {% if not current_user.is_authenticated %}
+        <a class="btn" href="{{ url_for('register') }}">Get Started</a>
+    {% else %}
+        <a class="btn" href="{{ url_for('rooms') }}">Enter Rooms</a>
+    {% endif %}
+</section>
+
+<section class="rooms-preview">
+    <h2>Available Rooms</h2>
+    <div class="room-grid">
+        <div class="room-card">
+            <h3>Room 1: Phishing Attack</h3>
+            <p>Investigate an email attack and find the hidden flag.</p>
+            <a class="btn-small" href="{{ url_for('rooms') }}">Play</a>
+        </div>
+        <div class="room-card">
+            <h3>Room 2: Malware Analysis</h3>
+            <p>Dissect malicious code to uncover the secrets.</p>
+            <a class="btn-small" href="{{ url_for('rooms') }}">Play</a>
+        </div>
+        <div class="room-card">
+            <h3>Room 3: Forensics Lab</h3>
+            <p>Analyze system artifacts and capture the flag.</p>
+            <a class="btn-small" href="{{ url_for('rooms') }}">Play</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

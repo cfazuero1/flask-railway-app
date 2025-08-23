@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+    <h1>Login</h1>
+    <p>Access your rooms and track your progress!</p>
+</section>
+
+<div class="container">
+    <form method="POST" action="{{ url_for('login') }}" style="max-width: 400px; margin:auto;">
+        <label>Username<br><input name="username" required></label><br><br>
+        <label>Password<br><input type="password" name="password" required></label><br><br>
+        <button type="submit">Login</button>
+    </form>
+</div>
+{% endblock %}
