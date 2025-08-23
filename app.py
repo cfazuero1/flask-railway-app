@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'supersecretkey'
@@ -85,6 +86,11 @@ def login():
 def rooms():
     return render_template("rooms.html")
 
+@app.route("/room1")
+@login_required
+def room1():
+    console_url = os.getenv("CONSOLE_URL", "https://kali-linux-docker-production-d6f3.up.railway.app/")
+    return render_template("room1.html", console_url=console_url)
 
 @app.route("/logout")
 @login_required

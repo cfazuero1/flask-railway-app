@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero" style="min-height:40vh;">
+  <h1>Room 1: The Awakening</h1>
+   <!-- Countdown badge -->
+  <div id="timerBadge" style="
+      margin-top:12px;
+      display:inline-block;
+      padding:8px 14px;
+      border:1px solid #0ff;
+      border-radius:999px;
+      color:#0ff;
+      background:rgba(0,255,255,.08);
+      font-weight:700;
+      letter-spacing:.5px;">
+    Time left: <span id="timeLeft">10:00</span>
+  </div>
+</section>
+
+<section class="rooms-preview" style="padding:32px;">
+  <div class="room-card" style="max-width:960px;margin:0 auto;">
+    <p>After escaping a ruthless hacker gang in Colombia, Alejandro Salazar, a brilliant but reluctant hacker, finds himself trapped in the basement of Q1 Tower in Australia. 
+     His former gang boss has kidnapped him and planted a bomb at the top of the tower. Alejandro has just 12 hours to survive.</p>
+  
+    <p>He wakes up on a cold, concrete floor. His head throbs, vision blurry. Heavy iron bracelets lock his arms to a steel chair. 
+        A distorted, familiar voice crackles through a hidden speaker:</p>
+
+    <blockquote>
+        “You’ve got 10 minutes to free yourself. Solve the puzzle, unlock the restraints, and access the computer. 
+        Only then will the elevator respond. Good luck… you’ll need it.”
+    </blockquote>
+    <h3>The Scene</h3>
+    <p>The room is dimly lit by the glow of a single terminal across the floor. Wires snake from the machine into strange devices on the walls. 
+       On a table nearby: scattered tools, a locked case, and a glowing keypad. The countdown begins…</p>
+
+    <!-- Add the generated image here -->
+    <div data-clue="U29tZXRoaW5nIGhpZGRlbiBhcm91bmQgaGVyZQ=="></div>
+    <img src="{{ url_for('static', filename='images/room1_scene.png') }}" 
+         alt="Room 1: Alejandro trapped in the basement"
+         style="width:30%;max-width:800px;display:block;margin:20px auto;border-radius:8px;border:1px solid #0ff;">
+
+    <p style="margin-top:20px;">
+      Can you help Alejandro find the right items hidden around the room that will let him access the computer before time runs out?
+    </p>
+
+    <div style="text-align:center;margin-top:24px;">
+      <a class="btn" href="{{ console_url }}" target="_blank" rel="noopener noreferrer">
+        Open Console
+      </a>
+    </div>
+  </div>
+</section>
+<!-- Countdown logic -->
+<script>
+(function () {
+  // 10 minutes in seconds
+  const TOTAL = 10 * 60;
+
+  // Persist per-browser via sessionStorage so refresh doesn't reset the timer
+  const KEY = "room1_deadline_epoch_ms";
+
+  // If we don't have a deadline, set one now
+  let deadline = sessionStorage.getItem(KEY);
+  const now = Date.now();
+  if (!deadline) {
+    deadline = (now + TOTAL * 1000).toString();
+    sessionStorage.setItem(KEY, deadline);
+  }
+
+  const timeLeftEl = document.getElementById("timeLeft");
+  const homeUrl = "{{ url_for('index') }}";
+
+  function fmt(secs) {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+  }
+
+  function tick() {
+    const ms = parseInt(sessionStorage.getItem(KEY), 10) - Date.now();
+    const secs = Math.max(0, Math.floor(ms / 1000));
+
+    if (timeLeftEl) timeLeftEl.textContent = fmt(secs);
+
+    // Optional: color warn under 60s
+    if (secs <= 60) {
+      document.getElementById("timerBadge").style.borderColor = "#ff5050";
+      document.getElementById("timerBadge").style.color = "#ff8080";
+      document.getElementById("timerBadge").style.background = "rgba(255,80,80,.08)";
+    }
+
+    if (secs <= 0) {
+      // Clear the timer for next attempt and redirect
+      sessionStorage.removeItem(KEY);
+      window.location.replace(homeUrl);
+      return;
+    }
+  }
+
+  tick(); // initial
+  const interval = setInterval(tick, 1000);
+
+  // Safety: clear when leaving page
+  window.addEventListener("beforeunload", () => clearInterval(interval));
+})();
+</script>
+{% endblock %}
