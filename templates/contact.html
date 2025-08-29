@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero" style="min-height:30vh;">
+  <h1>Contact Us</h1>
+  <p>Send us a note — we’d love to hear from you.</p>
+</section>
+
+<section class="rooms-preview" style="padding:32px;">
+  <div class="room-card" style="max-width:720px;margin:0 auto;text-align:left;">
+    <p style="margin-top:0;">
+      Prefer email? Write us at
+      <a href="mailto:info@hackerescaperoom.online">info@hackerescaperoom.online</a>.
+    </p>
+
+    <form method="POST" action="{{ url_for('contact') }}" style="display:grid;gap:12px;">
+      <div>
+        <label>Name</label>
+        <input class="input" type="text" name="name" required>
+      </div>
+      <div>
+        <label>Email</label>
+        <input class="input" type="email" name="email" required>
+      </div>
+      <div>
+        <label>Message</label>
+        <textarea class="input" name="message" style="min-height:180px; min-width:100%;" rows="10" required></textarea>
+      </div>
+      <button class="btn" type="submit">Send</button>
+
+      {% if message %}
+        <p style="color:#00f5d4;margin:8px 0 0;">{{ message }}</p>
+      {% endif %}
+      {% if error %}
+        <p style="color:#ff8080;margin:8px 0 0;">{{ error }}</p>
+      {% endif %}
+    </form>
+  </div>
+</section>
+{% endblock %}

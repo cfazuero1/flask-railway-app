@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block content %}
+
+<section class="hero" style="min-height:30vh;">
+  <h1>Room 2: Elevator Lock</h1>
+  <p>Enter the flag from Room 1 to unlock the elevator.</p>
+</section>
+
+<section class="rooms-preview" style="padding:32px;">
+  <div class="room-card" style="max-width:960px;margin:0 auto;text-align:left;">
+    <!-- Elevator image -->
+    <div style="display:flex;justify-content:center;margin-bottom:16px;">
+      <img id="elevatorImg"
+           src="{{ url_for('static', filename='images/elevator_closed.jpg') }}"
+           alt="Locked elevator"
+           style="width:360px;max-width:90%;border:1px solid #0ff;border-radius:10px;">
+    </div>
+
+    <!-- Flag form -->
+    <form id="flagForm" onsubmit="return false;" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <label for="flagInput" style="font-weight:600;">Flag:</label>
+      <input id="flagInput" class="input" type="text" placeholder="paste the flag from Room 1"
+             style="flex:1;min-width:260px;">
+      <button id="flagBtn" class="btn" type="button">Unlock</button>
+      <span id="flagMsg" style="margin-left:8px;color:#9ee;"></span>
+    </form>
+
+    <!-- Success text (hidden initially) -->
+    <p id="comingText" style="display:none;margin-top:16px;font-size:1.05rem;">
+      Comming soon...
+      In the mean while you can practise: <a href="https://dataexplorer.azure.com/" target="_blank">Data Explorer</a>
+    </p>
+  </div>
+</section>
+
+<script>
+(function(){
+  const btn   = document.getElementById('flagBtn');
+  const input = document.getElementById('flagInput');
+  const msg   = document.getElementById('flagMsg');
+  const img   = document.getElementById('elevatorImg');
+  const coming= document.getElementById('comingText');
+
+  async function verify() {
+    const flag = (input.value || '').trim();
+    if (!flag) {
+      msg.textContent = 'Please enter a flag.';
+      msg.style.color = '#ff9';
+      return;
+    }
+    msg.textContent = 'Checking...';
+    msg.style.color = '#9ee';
+
+    try {
+      const res = await fetch("{{ url_for('room2_verify') }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ flag })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        // Swap image to OPEN elevator and show message
+        img.src = "{{ url_for('static', filename='images/elevator_open.jpg') }}";
+        msg.textContent = 'Unlocked!';
+        msg.style.color = '#00f5d4';
+        coming.style.display = 'block';
+
+        // Freeze the form
+        input.disabled = true;
+        btn.disabled = true;
+        btn.classList.add('disabled');
+      } else {
+        msg.textContent = 'Incorrect flag.';
+        msg.style.color = '#ff8080';
+      }
+    } catch (e) {
+      msg.textContent = 'Network error.';
+      msg.style.color = '#ff8080';
+    }
+  }
+
+  btn.addEventListener('click', verify);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') verify();
+  });
+})();
+</script>
+
+{% endblock %}

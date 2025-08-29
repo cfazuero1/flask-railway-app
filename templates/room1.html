@@ -43,13 +43,137 @@
       Can you help Alejandro find the right items hidden around the room that will let him access the computer before time runs out?
     </p>
 
-    <div style="text-align:center;margin-top:24px;">
-      <a class="btn" href="{{ console_url }}" target="_blank" rel="noopener noreferrer">
-        Open Console
-      </a>
+    
+  </div>
+  <div class="room-card" style="max-width:960px;margin:0 auto;text-align:left;">
+    <h3>Connect to a Remote Console</h3>
+    <p>Enter host, port, user and password to start an interactive SSH session.</p>
+
+    <form id="sshForm" onsubmit="return false" style="display:grid;grid-template-columns:1fr 120px 1fr 1fr auto; gap:8px; align-items:end;">
+      <!-- Hidden host -->
+      <input id="sshHost" type="hidden" value="152.69.178.218">
+      <!-- Hidden port -->
+      <input id="sshPort" type="hidden" value="2222">
+
+      <div>
+        <label>User</label>
+        <input id="sshUser" type="text" placeholder="user" required class="input">
+      </div>
+      <div>
+        <label>Password</label>
+        <input id="sshPass" type="password" placeholder="••••••••" class="input">
+      </div>
+      <div>
+        <button id="sshConnect" class="btn" type="button">Connect</button>
+      </div>
+    </form>
+
+    <div id="terminalWrap" style="margin-top:16px;border:1px solid #0ff;border-radius:8px;overflow:hidden;">
+      <div id="terminal" style="height:420px; background:#05060b;"></div>
     </div>
+
+    <p id="sshStatus" style="margin-top:8px;color:#9ee;">Disconnected.</p>
   </div>
 </section>
+
+<!-- xterm.js (terminal) + fit addon from CDN -->
+<link rel="stylesheet" href="https://unpkg.com/xterm/css/xterm.css">
+<script src="https://unpkg.com/xterm/lib/xterm.js"></script>
+<script src="https://unpkg.com/xterm-addon-fit/lib/xterm-addon-fit.js"></script>
+
+<script>
+(function(){
+  // Helpers
+  function wsURL(path){
+    const proto = (location.protocol === 'https:') ? 'wss' : 'ws';
+    return proto + '://' + location.host + path;
+  }
+
+  // UI
+  const hostEl = document.getElementById('sshHost');
+  const portEl = document.getElementById('sshPort');
+  const userEl = document.getElementById('sshUser');
+  const passEl = document.getElementById('sshPass');
+  const btnEl  = document.getElementById('sshConnect');
+  const statusEl = document.getElementById('sshStatus');
+
+  // xterm
+  const term = new window.Terminal({
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+    theme: { background: '#05060b', foreground: '#d6f7ff', cursor: '#00ffff' },
+    cursorBlink: true,
+    scrollback: 2000
+  });
+  const fit = new window.FitAddon.FitAddon();
+  term.loadAddon(fit);
+  term.open(document.getElementById('terminal'));
+  fit.fit();
+  window.addEventListener('resize', () => fit.fit());
+
+  let ws;
+
+  function connectSSH(){
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.close();
+    }
+    const cfg = {
+      host: hostEl.value.trim(),
+      port: parseInt(portEl.value || '22', 10),
+      user: userEl.value.trim(),
+      password: passEl.value
+    };
+    if (!cfg.host || !cfg.user) {
+      term.writeln('\r\n*** Please fill host and user.\r\n');
+      return;
+    }
+
+    ws = new WebSocket(wsURL('/ws/ssh'));
+    statusEl.textContent = 'Connecting...';
+    ws.binaryType = 'arraybuffer';
+
+    ws.onopen = () => {
+      // send connection params first
+      ws.send(JSON.stringify(cfg));
+      statusEl.textContent = `Connected to host as ${cfg.user}`;
+      term.focus();
+    };
+
+    ws.onmessage = (ev) => {
+      const data = (typeof ev.data === 'string') ? ev.data : new TextDecoder().decode(new Uint8Array(ev.data));
+      term.write(data);
+    };
+
+    ws.onclose = () => {
+      statusEl.textContent = 'Disconnected.';
+      term.writeln('\r\n*** Disconnected ***\r\n');
+    };
+
+    ws.onerror = () => {
+      statusEl.textContent = 'Error (see terminal).';
+      term.writeln('\r\n*** WebSocket error ***\r\n');
+    };
+  }
+
+  // Send keystrokes to server
+  term.onData((data) => {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(data);
+    }
+  });
+
+  btnEl.addEventListener('click', connectSSH);
+})();
+</script>
+
+<style>
+/* light inputs that match your cyan theme */
+.input{
+  width:100%; padding:.55rem .7rem; background:#0c0f15; color:#d6f7ff;
+  border:1px solid #0ff3; border-radius:.6rem; outline:none;
+}
+.input:focus{ border-color:#0ff; box-shadow:0 0 0 2px #0ff2; }
+</style>
+
 <!-- Countdown logic -->
 <script>
 (function () {

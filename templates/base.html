@@ -9,12 +9,26 @@
 <body>
   <header>
     <div class="logo">
-        <img src="{{ url_for('static', filename='images/logo.png') }}"
+        <img src="{{ url_for('static', filename='images/logo.jpg') }}"
              style="height:40px; vertical-align:middle; margin-right:10px;">
         Hacker Escape Room
     </div>
+    <!-- Mini Random Player -->
+    <div id="miniPlayer" style="display:flex;align-items:center;gap:10px;margin-left:18px;">
+      <button id="mpBtn" class="btn" type="button" aria-label="Play">
+        ▶
+      </button>
+      <div id="mpNow" style="font-size:.9rem;color:#9ee;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:380px;">
+        <span class="muted">Ready</span>
+      </div>
+      <audio id="mpAudio" preload="none"></audio>
+    </div>
+
     <nav>
       <a href="{{ url_for('index') }}">Home</a>
+      <a href="{{ url_for('heroes') }}">Heroes</a>
+      <a href="{{ url_for('about') }}">About</a>
+      <a href="{{ url_for('contact') }}">Contact</a>
       {% if current_user.is_authenticated %}
         <a href="{{ url_for('rooms') }}">Rooms</a>
         <a href="{{ url_for('logout') }}">Logout</a>
@@ -43,4 +57,83 @@
     <p>© 2025 Hacker Escape Room | Built for Swordead</p>
   </footer>
 </body>
+<script>
+(function () {
+  const btn   = document.getElementById('mpBtn');
+  const info  = document.getElementById('mpNow');
+  const audio = document.getElementById('mpAudio');
+  if (!btn || !info || !audio) return;
+
+  // Hardcoded files (must exist in /static/music/)
+  const files = [
+    "{{ url_for('static', filename='music/hack-the-system-infraction-main-version-02-00-2915.mp3') }}",
+    "{{ url_for('static', filename='music/push-yourself-hey-pluto-main-version-2487-01-52.mp3') }}",
+    "{{ url_for('static', filename='music/cashing-out-alamance-main-version-28434-04-04.mp3') }}",
+    "{{ url_for('static', filename='music/no-mercy-soundroll-main-version-7570-02-34.mp3') }}",
+    "{{ url_for('static', filename='music/pedal-to-the-metal-matrika-main-version-02-20-12120.mp3') }}",
+    "{{ url_for('static', filename='music/all-in-jonezen-main-version-23262-02-07.mp3') }}",
+    "{{ url_for('static', filename='music/picture-frames-prigida-main-version-21374-01-44.mp3') }}",
+    "{{ url_for('static', filename='music/golden-era-moire-main-version-41371-01-57.mp3') }}"
+  ];
+
+  function titleCase(s){ return s.replace(/\b\w/g,c=>c.toUpperCase()); }
+
+  // Try to derive Title — Artist from "<title>-<artist>-main-version-....mp3"
+  function metaFromUrl(u){
+    const file = decodeURIComponent(u.split('/').pop());
+    const base = file.replace(/\.[^.]+$/,'');                  // no .mp3
+    const beforeMain = base.split('-main-version')[0] || base; // title-artist
+    const parts = beforeMain.split('-');
+    const artistToken = parts.length>1 ? parts.pop() : 'Unknown';
+    const titleTokens = parts.length ? parts : ['Unknown'];
+    const title  = titleCase(titleTokens.join(' ').replace(/\s+/g,' ').trim());
+    const artist = titleCase(artistToken.replace(/-/g,' ').trim());
+    return {title, artist};
+  }
+
+  function pickRandom(){
+    return files[Math.floor(Math.random()*files.length)];
+  }
+
+  let playing = false;
+
+  async function playRandom(){
+    const url = pickRandom();
+    const {title, artist} = metaFromUrl(url);
+
+    try {
+      audio.pause();
+      audio.removeAttribute('src');
+      audio.load();
+
+      audio.src = url;
+      await audio.play();
+      playing = true;
+      btn.textContent = '⏸';
+      const credit = artist ? ` • Courtesy of ${artist}` : '';
+      const label = `${title} — ${artist}${credit}`;
+      info.textContent = label;
+      info.title = label;
+    } catch(e){
+      info.innerHTML = `<span class="error">Play blocked: ${e.message || e}</span>`;
+      playing = false;
+      btn.textContent = '▶';
+    }
+  }
+
+  function pause(){
+    audio.pause();
+    playing = false;
+    btn.textContent = '▶';
+  }
+
+  btn.addEventListener('click', ()=> playing ? pause() : playRandom());
+  audio.addEventListener('ended', playRandom);
+  audio.addEventListener('error', ()=> {
+    info.innerHTML = `<span class="error">Audio error — skipping…</span>`;
+    playRandom();
+  });
+})();
+</script>
+
 </html>

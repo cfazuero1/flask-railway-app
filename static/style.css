@@ -7,8 +7,10 @@ body {
 }
 
 header {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 20px;
+    
     align-items: center;
     padding: 15px 40px;
     background: #0d0d18;
@@ -19,6 +21,7 @@ header .logo {
     font-size: 1.5rem;
     font-weight: bold;
     color: #0ff;
+    gap: 8px;
 }
 
 header nav a {
@@ -127,4 +130,45 @@ footer {
     border-top: 2px solid #0ff;
     margin-top: 50px;
     color: #0ff;
+}
+
+input.input,
+textarea.input {
+  background-color: #111;   /* same dark background */
+  color: #0ff;              /* cyan text */
+  border: 1px solid #0ff;   /* cyan border like your theme */
+  padding: 10px;
+  font-size: 1rem;
+  border-radius: 4px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+input.input:focus,
+textarea.input:focus {
+  outline: none;
+  border-color: #0ff;
+  background-color: #000;   /* slightly darker on focus for effect */
+}
+
+#miniPlayer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 8px;   /* closer to the left */
+}
+
+#miniPlayer .muted { color:#6ba; opacity:.8; }
+#miniPlayer .error { color:#ff8080; }
+
+#miniPlayer button.btn {
+  border-radius: 50%;     /* makes it circular */
+  width: 42px;
+  height: 42px;
+  min-width: unset;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
 }

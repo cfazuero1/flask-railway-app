@@ -3,3 +3,11 @@ gunicorn
 flask_sqlalchemy
 flask_bcrypt
 flask_login
+paramiko
+flask-sock
+gevent
+gevent-websocket
+flask-mail
+itsdangerous
+dotenv
+requests

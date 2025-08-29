@@ -1,15 +1,33 @@
 {% extends "base.html" %}
 {% block content %}
 <section class="hero">
-    <h1>Create Your Account</h1>
-    <p>Join Hacker Escape Room and start solving challenges!</p>
+  <h1>Register</h1>
+  <p>Create an account to start your escape!</p>
 </section>
 
 <div class="container">
-    <form method="POST" action="{{ url_for('register') }}" style="max-width: 400px; margin:auto;">
-        <label>Username<br><input name="username" required></label><br><br>
-        <label>Password<br><input name="password" type="password" required></label><br><br>
-        <button type="submit">Register</button>
-    </form>
+  <form method="POST" action="{{ url_for('register') }}" style="max-width:420px;margin:auto;text-align:left;">
+    <label>Username
+      <input name="username" required class="input">
+    </label><br><br>
+
+    <label>Email
+      <input type="email" name="email" required class="input">
+    </label><br><br>
+
+    <label>Password
+      <input type="password" name="password" required minlength="8" class="input">
+    </label><br><br>
+
+    <label>Confirm password
+      <input type="password" name="password2" required minlength="8" class="input">
+    </label><br><br>
+
+    <button type="submit" class="btn">Register</button>
+
+    {% if error %}
+      <p style="color:#ff8080;margin-top:12px;">{{ error }}</p>
+    {% endif %}
+  </form>
 </div>
 {% endblock %}

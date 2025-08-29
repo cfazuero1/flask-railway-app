@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero" style="min-height:30vh;">
+  <h1>Meet the Heroes</h1>
+  <p>The champions of the Hacker Escape Room. Each with a unique mission, each fighting their own cyber battles.</p>
+</section>
+
+<section class="rooms-preview" style="padding:32px;display:grid;gap:32px;max-width:1000px;margin:auto;">
+
+  <!-- Nguyen Lan -->
+  <div class="room-card" style="text-align:left;display:grid;grid-template-columns:220px 1fr;gap:20px;align-items:start;">
+    <img src="{{ url_for('static', filename='images/lan.jpg') }}" alt="Nguyen Lan" 
+         style="width:100%;max-width:220px;border-radius:12px;border:2px solid #0ff;">
+    <div>
+      <h2>Nguyen Lan aka The GRC Guardian</h2>
+      <p><strong>From:</strong> Vietnam</p>
+      <p><strong>Role:</strong> Governance, Risk & Compliance Specialist</p>
+      <p><strong>Company:</strong> Aquila Global Holdings (Melbourne)</p>
+      <p>
+        At <em>Aquila Global Holdings</em>, a sprawling multinational, Nguyen Lan uncovers a quiet insider
+        ring abusing weak policies and loophole-ridden controls to siphon sensitive information.
+        She maps policy-to-control gaps, strengthens governance, and builds insider-threat playbooks to
+        expose the manipulators and restore accountability across the enterprise.
+      </p>
+      <p><strong>Focus:</strong> Policy design, control testing, insider-threat investigations, audit readiness.</p>
+    </div>
+  </div>
+
+  <!-- Chinedu Okoro -->
+  <div class="room-card" style="text-align:left;display:grid;grid-template-columns:220px 1fr;gap:20px;align-items:start;">
+    <img src="{{ url_for('static', filename='images/chinedu.jpg') }}" alt="Chinedu Okoro" 
+         style="width:100%;max-width:220px;border-radius:12px;border:2px solid #0ff;">
+    <div>
+      <h2>Chinedu Okoro aka The Pentest Phantom</h2>
+      <p><strong>From:</strong> Nigeria</p>
+      <p><strong>Role:</strong> Red Team / Penetration Tester</p>
+      <p><strong>Engagement:</strong> Kestrel Biotech full-scope assessment</p>
+      <p>
+        Brought in by <em>Kestrel Biotech</em>, Chinedu blends social engineering with sharp exploit chains:
+        phishing pretexts, badge tailgating, and lateral movement from a forgotten lab subnet into production.
+        His job is to break in before attackers do and leave a trail of fixes that close every door he opened.
+      </p>
+      <p><strong>Focus:</strong> Social engineering, exploitation, privilege escalation, reporting.</p>
+    </div>
+  </div>
+
+  <!-- Alejandro Salazar -->
+  <div class="room-card" style="text-align:left;display:grid;grid-template-columns:220px 1fr;gap:20px;align-items:start;">
+    <img src="{{ url_for('static', filename='images/alejandro.jpg') }}" alt="Alejandro Salazar" 
+         style="width:100%;max-width:220px;border-radius:12px;border:2px solid #0ff;">
+    <div>
+      <h2>Alejandro Salazar aka The Reluctant Cyber Analyst</h2>
+      <p><strong>From:</strong> Colombia</p>
+      <p><strong>Role:</strong> Cybersecurity Analyst</p>
+      <p>
+        After escaping a ruthless hacker gang in Colombia, Alejandro is kidnapped and trapped in the
+        basement of Q1 Tower, Australia. A bomb ticks at the top. He has <strong>12 hours</strong> to climb
+        floor by floor, solving CTF-style challenges that unlock the elevator until he reaches the device
+        and disables it. Brilliant, reluctant, and under pressure, Alejandro turns puzzle solving into survival.
+      </p>
+      <p><strong>Focus:</strong> DFIR, log analysis, puzzle solving, incident response under pressure.</p>
+    </div>
+  </div>
+
+</section>
+{% endblock %}
