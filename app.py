@@ -180,6 +180,10 @@ class User(db.Model, UserMixin):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+@app.route("/console1")
+def console():
+    return render_template("console1.html")
+
 @app.route("/heroes")
 def heroes():
     return render_template("heroes.html")
