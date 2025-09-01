@@ -13,30 +13,7 @@ import requests
 import logging
 from flask import render_template
 
-@app.route("/_health")
-def health():
-    return "ok", 200
 
-@app.route("/_debug/test-mail")
-def test_mail():
-    try:
-        to_addr = os.getenv("CONTACT_EMAIL") or os.getenv("MAIL_DEFAULT_SENDER")
-        if not to_addr:
-            return "No CONTACT_EMAIL or MAIL_DEFAULT_SENDER set", 500
-        msg = Message("Mail test", recipients=[to_addr], body="Mail path OK.")
-        mail.send(msg)
-        return "Mail sent", 200
-    except Exception as e:
-        app.logger.exception("Mail test failed")
-        return f"Mail failed: {e}", 500
-
-logging.basicConfig(level=logging.INFO)
-
-@app.errorhandler(Exception)
-def handle_all_errors(e):
-    app.logger.exception("Unhandled exception")
-    # You can create templates/500.html if you want something nicer
-    return render_template("500.html"), 500
 
 # === Load environment ===
 load_dotenv()
@@ -74,6 +51,31 @@ mail = Mail(app)
 ts = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
 sock = Sock(app)  # after you create `app = Flask(__name__)`
+
+@app.route("/_health")
+def health():
+    return "ok", 200
+
+@app.route("/_debug/test-mail")
+def test_mail():
+    try:
+        to_addr = os.getenv("CONTACT_EMAIL") or os.getenv("MAIL_DEFAULT_SENDER")
+        if not to_addr:
+            return "No CONTACT_EMAIL or MAIL_DEFAULT_SENDER set", 500
+        msg = Message("Mail test", recipients=[to_addr], body="Mail path OK.")
+        mail.send(msg)
+        return "Mail sent", 200
+    except Exception as e:
+        app.logger.exception("Mail test failed")
+        return f"Mail failed: {e}", 500
+
+logging.basicConfig(level=logging.INFO)
+
+@app.errorhandler(Exception)
+def handle_all_errors(e):
+    app.logger.exception("Unhandled exception")
+    # You can create templates/500.html if you want something nicer
+    return render_template("500.html"), 500
 
 @sock.route('/ws/ssh')
 def ws_ssh(ws):
