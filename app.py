@@ -166,7 +166,14 @@ def contact():
         except Exception as e:
             # Optional: log(e)
             return render_template("contact.html", error="Sorry, we couldn't send your message right now.")
-
+    env_info = {
+        "FLASK_ENV": os.getenv("FLASK_ENV"),
+        "MAIL_SERVER": os.getenv("MAIL_SERVER"),
+        "MAIL_PORT": os.getenv("MAIL_PORT"),
+        "MAIL_DEFAULT_SENDER": os.getenv("MAIL_DEFAULT_SENDER"),
+        "CONTACT_EMAIL": os.getenv("CONTACT_EMAIL"),
+        "RECAPTCHA_ENABLED": os.getenv("RECAPTCHA_ENABLED"),
+    }
     return render_template("contact.html")
 
 # === Models ===
