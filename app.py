@@ -59,12 +59,15 @@ def health():
 @app.route("/_debug/test-mail")
 def test_mail():
     try:
-        to_addr = os.getenv("CONTACT_EMAIL") or os.getenv("MAIL_DEFAULT_SENDER")
-        if not to_addr:
-            return "No CONTACT_EMAIL or MAIL_DEFAULT_SENDER set", 500
-        msg = Message("Mail test", recipients=[to_addr], body="Mail path OK.")
+        # Force the recipient to be your fixed address
+        to_addr = "info@hackerescaperoom.com"
+        msg = Message(
+            "Mail test",
+            recipients=[to_addr],
+            body="Mail path OK. This is a test email from your Flask app."
+        )
         mail.send(msg)
-        return "Mail sent", 200
+        return f"Mail sent to {to_addr}", 200
     except Exception as e:
         app.logger.exception("Mail test failed")
         return f"Mail failed: {e}", 500
