@@ -252,7 +252,7 @@ def logout():
     return redirect(url_for("index"))
 
 # --- Forgot password ---
-@app.route("/forgot", methods=["GET","POST"])
+@app.route("/forgot", methods=["GET","POST"], endpoint='forgot')
 def forgot_password():
     if request.method == "POST":
         email = (request.form.get("email") or "").strip().lower()
@@ -276,7 +276,7 @@ def forgot_password():
 @app.route("/reset/<token>", methods=["GET","POST"])
 def reset_password(token):
     try:
-        email = ts.loads(token, salt=app.config["SECURITY_PASSWORD_SALT"], max_age=3600)
+        email = ts.loads(token, saltforgot=app.config["SECURITY_PASSWORD_SALT"], max_age=3600)
     except SignatureExpired:
         return render_template("reset_password.html", token=token, error="Link expired")
     except BadSignature:
