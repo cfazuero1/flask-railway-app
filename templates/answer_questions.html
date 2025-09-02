@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <h1>Answer Security Questions</h1>
+</section>
+<div class="container" style="max-width:500px;margin:auto;">
+  <form method="POST">
+    <label>{{ user.sq1 }}<br>
+      <input class="input" type="password" name="sa1" required>
+    </label><br><br>
+    <label>{{ user.sq2 }}<br>
+      <input class="input" type="password" name="sa2" required>
+    </label><br><br>
+    <label>{{ user.sq3 }}<br>
+      <input class="input" type="password" name="sa3" required>
+    </label><br><br>
+    <button class="btn" type="submit">Verify</button>
+  </form>
+</div>
+{% endblock %}

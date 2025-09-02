@@ -37,6 +37,12 @@
         <a href="{{ url_for('login') }}">Login</a>
         <a href="{{ url_for('register') }}">Register</a>
       {% endif %}
+      {% if current_user.is_authenticated and not current_user.has_security_questions %}
+        <div style="background:#112; border:1px solid #0ff; padding:8px; text-align:center; margin:0 0 8px 0;">
+          For better account recovery, please
+          <a href="{{ url_for('security-questions') }}">set your security questions</a>.
+        </div>
+      {% endif %}
     </nav>
   </header>
 

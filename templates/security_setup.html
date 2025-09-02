@@ -1,29 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="hero">
-  <h1>Register</h1>
-  <p>Create an account to start your escape!</p>
+<section class="hero"><h1>Set Your Security Questions</h1>
+  <p>Choose three questions and answers. This helps you recover access if you forget your password.</p>
 </section>
 
-<div class="container">
-  <form method="POST" action="{{ url_for('register') }}" style="max-width:420px;margin:auto;text-align:left;">
-    <label>Username
-      <input name="username" required class="input">
-    </label><br><br>
-
-    <label>Email
-      <input type="email" name="email" required class="input">
-    </label><br><br>
-
-    <label>Password
-      <input type="password" name="password" required minlength="8" class="input">
-    </label><br><br>
-
-    <label>Confirm password
-      <input type="password" name="password2" required minlength="8" class="input">
-    </label><br><br>
-
-    <h3 style="margin-top:20px;">Security Questions</h3>
+<div class="container" style="max-width:560px;margin:auto;text-align:left;">
+  {% if error %}<p style="color:#ff8080;">{{ error }}</p>{% endif %}
+  <form method="POST">
 
     <label>Question 1
       <select class="input" name="sq1_sel" id="sq1_sel" required>
@@ -32,9 +15,9 @@
         {% endfor %}
       </select>
     </label>
-    <div id="sq1_custom_wrap" style="display:none; margin-top:6px;">
+    <div id="sq1_custom_wrap" style="display:none;margin-top:6px;">
       <input class="input" name="sq1" placeholder="Enter your custom question">
-    </div><br/>
+    </div>
     <label>Answer 1
       <input class="input" type="password" name="sa1" required>
     </label>
@@ -47,9 +30,9 @@
         {% endfor %}
       </select>
     </label>
-    <div id="sq2_custom_wrap" style="display:none; margin-top:6px;">
+    <div id="sq2_custom_wrap" style="display:none;margin-top:6px;">
       <input class="input" name="sq2" placeholder="Enter your custom question">
-    </div><br/>
+    </div>
     <label>Answer 2
       <input class="input" type="password" name="sa2" required>
     </label>
@@ -62,20 +45,19 @@
         {% endfor %}
       </select>
     </label>
-    <div id="sq3_custom_wrap" style="display:none; margin-top:6px;">
+    <div id="sq3_custom_wrap" style="display:none;margin-top:6px;">
       <input class="input" name="sq3" placeholder="Enter your custom question">
-    </div><br/>
+    </div>
     <label>Answer 3
       <input class="input" type="password" name="sa3" required>
     </label>
-    <br/>
-    <button type="submit" class="btn">Register</button>
 
-    {% if error %}
-      <p style="color:#ff8080;margin-top:12px;">{{ error }}</p>
-    {% endif %}
+    <div style="margin-top:16px;">
+      <button class="btn" type="submit">Save Questions</button>
+    </div>
   </form>
 </div>
+
 <script>
 (function(){
   function hook(selId, wrapId) {
