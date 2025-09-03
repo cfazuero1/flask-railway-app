@@ -172,3 +172,27 @@ textarea.input:focus {
   justify-content: center;
   font-size: 1rem;
 }
+
+/* Style dropdowns to match site */
+select {
+  background-color: #111;       /* dark background */
+  color: #0ff;                  /* cyan text */
+  border: 1px solid #0ff;       /* cyan border */
+  padding: 6px;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+/* Style dropdown options */
+select option {
+  background-color: #111;
+  color: #0ff;
+}
+
+/* Highlighted option when user selects */
+select:focus {
+  outline: none;
+  border-color: #ff80ff; /* optional: pink glow when focused */
+  box-shadow: 0 0 6px #0ff;
+}
