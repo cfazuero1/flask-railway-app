@@ -14,6 +14,7 @@ import logging
 from flask_login import login_required, current_user
 from flask import request, render_template, redirect, url_for, flash, session
 from flask import send_from_directory
+from config import ROOM4_FLAG, GRC_CONTROLS, GRC_POLICIES, INSIDERS_TRUE, INSIDERS_FP, WRONG_STORY, GENERIC_WRONG
 
 # === Load environment ===
 load_dotenv()
@@ -498,7 +499,7 @@ def rooms():
     return render_template("rooms.html")
 
 @app.route("/room1")
-@login_required
+#@login_required
 def room1():
     console_url = os.getenv("CONSOLE_URL", "https://kali-linux-docker-production-d6f3.up.railway.app/")
     return render_template("room1.html", console_url=console_url)
@@ -534,6 +535,65 @@ def room3_verify():
     data = request.get_json(silent=True) or {}
     submitted = (data.get("flag") or "").strip()
     return jsonify({"ok": submitted == FLAG1})
+
+# --- Room 4: The Governance Labyrinth (GRC) ---
+
+@app.route("/room4", methods=["GET", "POST"])
+def room4():
+    # no DB progress: only session marks success during this browser session
+    solved = session.get("room4_complete", False)
+    errors, selected, stories = {}, {}, {}
+
+    if request.method == "POST":
+        # Grab values from form
+        choice_p1 = request.form.get("p1_control")
+        choice_p2 = request.form.get("p2_control")
+        choice_p3 = request.form.get("p3_control")
+
+        # Check correctness
+        if choice_p1 != "control_db_encryption_rotation":
+            errors["p1_control"] = True
+            stories["p1_control"] = WRONG_STORY.get(("p1", choice_p1), GENERIC_WRONG)
+
+        if choice_p2 != "control_jit_approval_logging":
+            errors["p2_control"] = True
+            stories["p2_control"] = WRONG_STORY.get(("p2", choice_p2), GENERIC_WRONG)
+
+        if choice_p3 != "control_tp_risk_assessment":
+            errors["p3_control"] = True
+            stories["p3_control"] = WRONG_STORY.get(("p3", choice_p3), GENERIC_WRONG)
+
+        # If no errors → solved
+        if not errors:
+            session["room4_complete"] = True
+            solved = True
+
+    briefing = {
+        "state": [
+            "Policy library is stale; several standards are 18+ months old.",
+            "Access reviews are overdue; exceptions tracked in an unmanaged spreadsheet.",
+            "Key rotation is inconsistent across data stores; crypto ownership unclear.",
+            "Third-party onboarding fast-tracks ‘low spend’ vendors without risk screening.",
+            "SIEM is quiet; DLP produces noisy alerts that are routinely ignored.",
+        ],
+        "insiders_true": [INSIDERS_TRUE["p1"], INSIDERS_TRUE["p2"], INSIDERS_TRUE["p3"]],
+        "insiders_fp": INSIDERS_FP,
+    }
+
+    return render_template(
+        "room4.html",
+        controls=GRC_CONTROLS,
+        policies=GRC_POLICIES,
+        errors=errors,
+        selected=selected,
+        stories=stories,
+        solved=solved,
+        insiders_true=INSIDERS_TRUE,
+        insiders_fp=INSIDERS_FP,
+        briefing=briefing,
+        room4_flag=ROOM4_FLAG,
+    )
+
 
 if __name__ == "__main__":
     with app.app_context():

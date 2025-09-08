@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+{% block content %}
+
+<section class="hero" style="min-height:26vh;">
+  <h1>Room 4: The Governance Labyrinth</h1>
+  
+</section>
+
+<section class="rooms-preview room4-wrap" style="padding:28px;">
+  <div class="room-card" style="max-width:980px;margin:0 auto;">
+
+    <!-- Company State Briefing -->
+    <h3 class="room-heading" style="color:#0ff;margin-bottom:8px;">Current State of Aquila</h3>
+    <p>Day one at Aquila Global Holdings. Nguyen Lan works at floor 33 of Q1 Tower in Australia. The company owns several floors of the tower. Nguyen Lan is briefed by her boss:
+     “Map policy-to-control gaps, expose the manipulators, and restore accountability.”</p>
+    <ul class="bulleted" style="margin:0 0 16px 18px;">
+      <li>Policy library is outdated; several standards are more than 18 months old.</li>
+      <li>Access reviews are overdue, with exceptions tracked in unmanaged spreadsheets.</li>
+      <li>Database key rotation is inconsistent; ownership unclear.</li>
+      <li>Third-party onboarding is fast-tracked for ‘low spend’ vendors without risk assessments.</li>
+      <li>SIEM monitoring produces noisy alerts that are often ignored.</li>
+    </ul>
+
+    <p>
+      Your task as <strong>Nguyen Lan</strong> is to review these weaknesses, map each <em>policy</em> to the
+      <em>control</em> that enforces it, and uncover where insiders may be exploiting the gaps.
+      Some signals may be benign; others expose true insider activity.
+    </p>
+
+    <!-- People of interest (no category headings) -->
+    <div class="card-grid">
+      {# True insiders #}
+      {% for pid, i in insiders_true.items() %}
+      <div class="person-card highlight" data-insider="true">
+        <div class="pc-name">{{ i.name }}</div>
+        <div class="pc-role">{{ i.role }}</div>
+        <div class="pc-line">Known tactic: {{ i.tactic }}</div>
+      </div>
+      {% endfor %}
+
+      {# False positives (still shown, but no heading) #}
+      {% for i in insiders_fp %}
+      <div class="person-card" data-insider="fp">
+        <div class="pc-name">{{ i.name }}</div>
+        <div class="pc-role">{{ i.role }}</div>
+        <div class="pc-line">Signal: {{ i.signal }}</div>
+        <div class="pc-note">Analyst note: {{ i.exoneration }}</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if not solved %}
+      <img src="{{ url_for('static', filename='images/room4_scene.jpg') }}"
+           alt="Governance Labyrinth: policy binders and a glowing controls dashboard"
+           style="width:72%;max-width:860px;display:block;margin:6px auto 22px;border-radius:8px;border:1px solid #0ff;"/>
+
+      <!-- Hidden hint -->
+      <div data-clue="R2FwcyBjbG9zZWQ6IEtleSByb3RhdGlvbiArIEpJVCBhcHByb3ZhbHMgKyBUaGlyZC1wYXJ0eSByaXNr"></div>
+
+      <h3 class="room-heading" style="margin-top:10px;">Map Each Policy to the Correct Enforcing Control</h3>
+      <p>If you choose incorrectly, Nguyen uncovers how an insider exploited that exact gap. When all mappings are correct, the elevator unlocks and an incident report exposes the ring (and clears false positives).</p>
+
+      <form method="POST" style="margin-top:16px;">
+        {# ===== Policy 1 ===== #}
+        <div class="policy-block {% if errors.get('p1_control') %}has-error{% endif %}">
+          <p class="policy-text"><strong>Policy 1:</strong> Customer and production data must be encrypted at rest with managed keys.</p>
+          <label class="policy-label" for="p1_control">Select the enforcing control:</label>
+          <select class="policy-select" name="p1_control" id="p1_control" required>
+            <option value="" disabled {% if not selected.get('p1_control') %}selected{% endif %}>Choose a control…</option>
+            {% for cid, cname in controls %}
+              <option value="{{ cid }}" {% if selected.get('p1_control') == cid %}selected{% endif %}>{{ cname }}</option>
+            {% endfor %}
+          </select>
+          {% if errors.get('p1_control') %}
+            <div class="inline-error">{{ stories.get('p1_control', 'That doesn’t enforce this policy. Re-evaluate.') }}</div>
+          {% endif %}
+        </div>
+
+        {# ===== Policy 2 ===== #}
+        <div class="policy-block {% if errors.get('p2_control') %}has-error{% endif %}">
+          <p class="policy-text"><strong>Policy 2:</strong> Access to customer data must be time-bound, approved, and fully auditable.</p>
+          <label class="policy-label" for="p2_control">Select the enforcing control:</label>
+          <select class="policy-select" name="p2_control" id="p2_control" required>
+            <option value="" disabled {% if not selected.get('p2_control') %}selected{% endif %}>Choose a control…</option>
+            {% for cid, cname in controls %}
+              <option value="{{ cid }}" {% if selected.get('p2_control') == cid %}selected{% endif %}>{{ cname }}</option>
+            {% endfor %}
+          </select>
+          {% if errors.get('p2_control') %}
+            <div class="inline-error">{{ stories.get('p2_control', 'That doesn’t enforce this policy. Re-evaluate.') }}</div>
+          {% endif %}
+        </div>
+
+        {# ===== Policy 3 ===== #}
+        <div class="policy-block {% if errors.get('p3_control') %}has-error{% endif %}">
+          <p class="policy-text"><strong>Policy 3:</strong> All third-party vendors must undergo an annual risk assessment before onboarding.</p>
+          <label class="policy-label" for="p3_control">Select the enforcing control:</label>
+          <select class="policy-select" name="p3_control" id="p3_control" required>
+            <option value="" disabled {% if not selected.get('p3_control') %}selected{% endif %}>Choose a control…</option>
+            {% for cid, cname in controls %}
+              <option value="{{ cid }}" {% if selected.get('p3_control') == cid %}selected{% endif %}>{{ cname }}</option>
+            {% endfor %}
+          </select>
+          {% if errors.get('p3_control') %}
+            <div class="inline-error">{{ stories.get('p3_control', 'That doesn’t enforce this policy. Re-evaluate.') }}</div>
+          {% endif %}
+        </div>
+
+        <button class="btn" type="submit">Validate</button>
+      </form>
+
+    {% else %}
+
+      <!-- Success / Exposure -->
+      <img src="{{ url_for('static', filename='images/elevator_open.jpg') }}"
+           alt="Elevator doors open — success"
+           style="width:60%;max-width:800px;display:block;margin:10px auto;border-radius:8px;border:1px solid #0ff;"/>
+
+      <div style="text-align:center;margin-top:18px;">
+        <h2 style="color:#0ff;">Controls aligned. Insider paths blocked.</h2>
+        <p>Nguyen correlates access logs, exceptions, and onboarding records to expose the insider ring and clear benign signals.</p>
+      </div>
+
+      <h3 style="color:#0ff;margin-top:18px;">Incident Report</h3>
+      <table style="width:100%;border-collapse:collapse;margin-top:8px;">
+        <thead>
+          <tr style="background:#0a0a0a;">
+            <th style="text-align:left;padding:8px;border:1px solid #0ff;">Person</th>
+            <th style="text-align:left;padding:8px;border:1px solid #0ff;">Role</th>
+            <th style="text-align:left;padding:8px;border:1px solid #0ff;">Finding</th>
+            <th style="text-align:left;padding:8px;border:1px solid #0ff;">Control Outcome</th>
+            <th style="text-align:left;padding:8px;border:1px solid #0ff;">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for k in ['p1','p2','p3'] %}
+          <tr>
+            <td style="padding:8px;border:1px solid #0ff;">{{ insiders_true[k].name }}</td>
+            <td style="padding:8px;border:1px solid #0ff;">{{ insiders_true[k].role }}</td>
+            <td style="padding:8px;border:1px solid #0ff;">{{ insiders_true[k].tactic }}</td>
+            <td style="padding:8px;border:1px solid #0ff;">{{ insiders_true[k].blocked_by }}</td>
+            <td style="padding:8px;border:1px solid #0ff;color:#6cff6c;">Blocked ✅</td>
+          </tr>
+          {% endfor %}
+          {% for fp in insiders_fp %}
+          <tr>
+            <td style="padding:8px;border:1px solid #0ff;">{{ fp.name }}</td>
+            <td style="padding:8px;border:1px solid #0ff;">{{ fp.role }}</td>
+            <td style="padding:8px;border:1px solid #0ff;">Signal: {{ fp.signal }}</td>
+            <td style="padding:8px;border:1px solid #0ff;">Evidence: {{ fp.exoneration }}</td>
+            <td style="padding:8px;border:1px solid #0ff;color:#80cfff;">Cleared 🟦</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <div style="text-align:center;margin-top:16px;">
+        <div style="display:inline-block;border:1px solid #0ff;border-radius:8px;padding:10px 14px;background:#0a0a0a;">
+          <div style="font-weight:700;color:#0ff;">Room 4 Flag</div>
+          <div style="margin-top:6px;word-break:break-all;">{{ room4_flag }}</div>
+        </div>
+      </div>
+
+      <div style="text-align:center;margin-top:14px;">
+        <a class="btn" href="{{ url_for('index') }}">Back to Rooms</a>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<style>
+  /* Left-align body copy in Room 4 */
+  .room4-wrap, .room4-wrap p, .room4-wrap li, .room4-wrap .person-card, .room4-wrap .policy-block { text-align:left; }
+  .room4-wrap .room-heading { text-align:center; }
+
+  /* Cards for people */
+  .card-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:18px;
+    margin:18px 0 28px;
+  }
+  .person-card{
+    background:rgba(0,255,255,.06);
+    border:1px solid rgba(0,255,255,.28);
+    border-radius:14px;
+    padding:14px 16px;
+    box-shadow:0 0 0 1px rgba(0,255,255,.05) inset, 0 8px 22px rgba(0,0,0,.35);
+  }
+  .person-card.highlight{ background:rgba(0,255,255,.10); border-color:rgba(0,255,255,.45); }
+  .person-card .pc-name{ color:#00F5F5; font-weight:800; letter-spacing:.2px; margin-bottom:4px; }
+  .person-card .pc-role{ font-weight:600; color:#a7f7f7; margin-bottom:6px; }
+  .person-card .pc-line, .person-card .pc-note{ color:#cdeff0; opacity:.9; }
+
+  /* Policy blocks & selects */
+  .policy-block{
+    margin:18px 0;
+    padding:14px 16px;
+    background:rgba(0,255,255,.04);
+    border:1px solid rgba(0,255,255,.22);
+    border-radius:12px;
+  }
+  .policy-text{ margin:0 0 8px; }
+  .policy-label{ display:block; margin-bottom:6px; font-weight:600; color:#a7f7f7; }
+  .policy-select{
+    width:100%;
+    padding:10px 12px;
+    border-radius:10px;
+    border:1px solid rgba(0,255,255,.35);
+    background:#0a0f14;
+    color:#eaffff;
+  }
+  .policy-select:focus{ outline:none; box-shadow:0 0 6px #0ff; border-color:#0ff; }
+  .policy-block.has-error { border-color:#ff6b6b; background:rgba(255,80,80,.08); }
+  .inline-error { color:#ff9aa2; margin-top:8px; font-size:.95rem; }
+
+</style>
+<script>
+  (function(){
+    const firstErr = document.querySelector('.policy-block.has-error');
+    if (firstErr) firstErr.scrollIntoView({behavior:'smooth', block:'center'});
+  })();
+</script>
+{% endblock %}
