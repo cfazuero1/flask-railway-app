@@ -48,6 +48,13 @@ QUESTIONS = [
     "Custom…"
 ]
 
+# --- parse once and overwrite the RAW names with structured ones ---
+GRC_CONTROLS = parse_controls(GRC_CONTROLS_RAW)
+GRC_POLICIES = parse_policies(GRC_POLICIES_RAW)
+INSIDERS_TRUE = parse_insiders_true(INSIDERS_TRUE_RAW)
+INSIDERS_FP = parse_insiders_fp(INSIDERS_FP_RAW)
+WRONG_STORY = parse_wrong_story(WRONG_STORY_RAW)
+
 # reCAPTCHA
 RECAPTCHA_SITE_KEY = os.getenv("RECAPTCHA_SITE_KEY")
 RECAPTCHA_SECRET_KEY = os.getenv("RECAPTCHA_SECRET_KEY")
@@ -536,10 +543,79 @@ def room3_verify():
     submitted = (data.get("flag") or "").strip()
     return jsonify({"ok": submitted == FLAG1})
 
+# --- parsers ---
+def parse_controls(s: str) -> dict:
+    # "key:Label|key2:Label2"
+    out = {}
+    for part in filter(None, s.split("|")):
+        k, v = part.split(":", 1)
+        out[k.strip()] = v.strip()
+    return out
+
+def parse_policies(s: str) -> dict:
+    # "p1:Policy text:control_key|p2:..."
+    out = {}
+    for part in filter(None, s.split("|")):
+        pid, rest = part.split(":", 1)                 # split off p#
+        desc, control = rest.rsplit(":", 1)            # last colon is control
+        out[pid.strip()] = {"desc": desc.strip(), "control": control.strip()}
+    return out
+
+def parse_insiders_true(s: str) -> dict:
+    """
+    "p1|Name|Role|Issue|Control|p2|Name|Role|Issue|Control|p3|..."
+    -> {"p1": {...}, "p2": {...}, "p3": {...}}
+    """
+    fields = [x.strip() for x in s.split("|") if x.strip()]
+    out = {}
+    # chunks of 5: id, name, role, issue, control_label
+    for i in range(0, len(fields), 5):
+        chunk = fields[i:i+5]
+        if len(chunk) < 5: break
+        pid, name, role, issue, control_label = chunk
+        out[pid] = {
+            "name": name,
+            "role": role,
+            "issue": issue,
+            "control_label": control_label
+        }
+    return out
+
+def parse_insiders_fp(s: str) -> list[dict]:
+    """
+    "Name|Role|Reason|Why OK|Name2|Role2|Reason2|WhyOK2"
+    -> list of dicts
+    """
+    fields = [x.strip() for x in s.split("|") if x.strip()]
+    out = []
+    for i in range(0, len(fields), 4):
+        chunk = fields[i:i+4]
+        if len(chunk) < 4: break
+        name, role, reason, justification = chunk
+        out.append({"name": name, "role": role, "reason": reason, "justification": justification})
+    return out
+
+def parse_wrong_story(s: str) -> dict:
+    """
+    "p1,control_x:Text.|p2,control_y:Text."
+    -> {("p1","control_x"): "Text.", ...}
+    """
+    out = {}
+    for part in filter(None, s.split("|")):
+        left, text = part.split(":", 1)
+        pid, control = [x.strip() for x in left.split(",", 1)]
+        out[(pid, control)] = text.strip()
+    return out
+
 # --- Room 4: The Governance Labyrinth (GRC) ---
 
 @app.route("/room4", methods=["GET", "POST"])
 def room4():
+    for required in ("p1", "p2", "p3"):
+        if required not in INSIDERS_TRUE:
+            raise RuntimeError(f"INSIDERS_TRUE is missing '{required}'. Check formatting.")
+        if required not in GRC_POLICIES:
+            raise RuntimeError(f"GRC_POLICIES is missing '{required}'. Check formatting.")
     # no DB progress: only session marks success during this browser session
     solved = session.get("room4_complete", False)
     errors, selected, stories = {}, {}, {}
