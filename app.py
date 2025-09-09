@@ -573,8 +573,9 @@ def room4():
 
     INSIDERS_TRUE= {'p1': {'name': 'Maya Chen', 'role': 'Data Steward, Customer Analytics', 'tactic': 'Exported datasets where keys never rotated.', 'blocked_by': 'Database encryption & key rotation'}, 'p2': {'name': 'Leo Duarte', 'role': 'Privileged Support Engineer, Platform Ops', 'tactic': 'Self-approved long-lived access; no approval trail.', 'blocked_by': 'Just-in-time access + approval & logging'}, 'p3': {'name': 'Ravi Kapoor', 'role': 'Vendor Manager, Procurement', 'tactic': 'Onboarded a shell reseller without due diligence.', 'blocked_by': 'Third-party annual risk assessment'}}
     GRC_CONTROLS=[('control_db_encryption_rotation', 'Database encryption & key rotation'), ('control_jit_approval_logging', 'Just-in-time access + approval & logging'), ('control_tp_risk_assessment', 'Third-party annual risk assessment'), ('control_siem_alerting', 'SIEM alerting & anomaly detection'), ('control_dlp_egress_monitoring', 'DLP egress monitoring'), ('control_quarterly_access_review', 'Quarterly access certification'), ('control_mfa_privileged', 'MFA for privileged accounts'), ('control_change_mgmt', 'Change management approvals')]
+    ROOM4_FLAG="FLAG{1f972555fafc2d1e84721beb2af088264d574ac5bfe5593a6bd27688c937cc7c}"
     #print(INSIDERS_TRUE['p1'])
-    print(GRC_CONTROLS)
+    #print(ROOM4_FLAG)
     briefing = {
         "state": [
             "Policy library is stale; several standards are 18+ months old.",
