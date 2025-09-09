@@ -48,12 +48,7 @@ QUESTIONS = [
     "Custom…"
 ]
 
-# --- parse once and overwrite the RAW names with structured ones ---
-GRC_CONTROLS = parse_controls(GRC_CONTROLS_RAW)
-GRC_POLICIES = parse_policies(GRC_POLICIES_RAW)
-INSIDERS_TRUE = parse_insiders_true(INSIDERS_TRUE_RAW)
-INSIDERS_FP = parse_insiders_fp(INSIDERS_FP_RAW)
-WRONG_STORY = parse_wrong_story(WRONG_STORY_RAW)
+
 
 # reCAPTCHA
 RECAPTCHA_SITE_KEY = os.getenv("RECAPTCHA_SITE_KEY")
@@ -611,6 +606,12 @@ def parse_wrong_story(s: str) -> dict:
 
 @app.route("/room4", methods=["GET", "POST"])
 def room4():
+    # --- parse once and overwrite the RAW names with structured ones ---
+    GRC_CONTROLS = parse_controls(GRC_CONTROLS_RAW)
+    GRC_POLICIES = parse_policies(GRC_POLICIES_RAW)
+    INSIDERS_TRUE = parse_insiders_true(INSIDERS_TRUE_RAW)
+    INSIDERS_FP = parse_insiders_fp(INSIDERS_FP_RAW)
+    WRONG_STORY = parse_wrong_story(WRONG_STORY_RAW)
     for required in ("p1", "p2", "p3"):
         if required not in INSIDERS_TRUE:
             raise RuntimeError(f"INSIDERS_TRUE is missing '{required}'. Check formatting.")
