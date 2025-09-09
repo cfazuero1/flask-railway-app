@@ -542,7 +542,7 @@ def room3_verify():
 
 @app.route("/room4", methods=["GET", "POST"])
 def room4():
-
+    
     # no DB progress: only session marks success during this browser session
     solved = session.get("room4_complete", False)
     errors, selected, stories = {}, {}, {}
@@ -570,7 +570,9 @@ def room4():
         if not errors:
             session["room4_complete"] = True
             solved = True
-
+    INSIDERS_TRUE="p1|Maya Chen|Data Steward, Customer Analytics|Exported datasets where keys never rotated.|Database encryption & key rotation|p2|Leo Duarte|Privileged Support Engineer, Platform Ops|Self-approved long-lived access; no approval trail.|Just-in-time access + approval & logging|p3|Ravi Kapoor|Vendor Manager, Procurement|Onboarded a shell reseller without due diligence.|Third-party annual risk assessment"
+    print(f"Value of p1: {p1}")
+    print(f"Contents of INSIDERS_TRUE: {INSIDERS_TRUE}")
     briefing = {
         "state": [
             "Policy library is stale; several standards are 18+ months old.",
