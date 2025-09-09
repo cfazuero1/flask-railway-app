@@ -571,7 +571,8 @@ def room4():
             session["room4_complete"] = True
             solved = True
 
-    print(f"Contents of INSIDERS_TRUE: {INSIDERS_TRUE}")
+    INSIDERS_TRUE= {'p1': {'name': 'Maya Chen', 'role': 'Data Steward, Customer Analytics', 'tactic': 'Exported datasets where keys never rotated.', 'blocked_by': 'Database encryption & key rotation'}, 'p2': {'name': 'Leo Duarte', 'role': 'Privileged Support Engineer, Platform Ops', 'tactic': 'Self-approved long-lived access; no approval trail.', 'blocked_by': 'Just-in-time access + approval & logging'}, 'p3': {'name': 'Ravi Kapoor', 'role': 'Vendor Manager, Procurement', 'tactic': 'Onboarded a shell reseller without due diligence.', 'blocked_by': 'Third-party annual risk assessment'}}
+
     print(INSIDERS_TRUE['p1'])
     briefing = {
         "state": [
