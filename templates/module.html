@@ -1,0 +1,428 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<!-- ===== DEVICE ===== -->
+<div class="device-shell-wide" style="margin: 0 auto; max-width:1100px;">
+  <!-- LEFT: screen -->
+  <div class="device-screen" style="min-width:500px;">
+    <div class="screen-inner">
+      <div class="screen-bar">
+        <span class="screen-title">{{ module | upper }}</span>
+        <span class="screen-sub">Simulated • UI</span>
+      </div>
+      <div id="content-area">Loading…</div>
+      <div class="screen-note" style="margin-top:10px;">Note: visual only — no RF/IR transmissions.</div>
+    </div>
+  </div>
+
+  <!-- RIGHT: controls -->
+  <div class="device-controls-side" style="min-width:140px;">
+    <div class="circle-pad" aria-label="Directional pad">
+      <button class="ok-btn" id="okBtn" aria-label="OK" tabindex="-1">OK</button>
+      <button class="arrow up"    id="btnUp"    aria-label="Up" tabindex="-1">▲</button>
+      <button class="arrow left"  id="btnLeft"  aria-label="Left" tabindex="-1">◀</button>
+      <button class="arrow right" id="btnRight" aria-label="Right" tabindex="-1">▶</button>
+      <button class="arrow down"  id="btnDown"  aria-label="Down" tabindex="-1">▼</button>
+    </div>
+    <button class="btn-back" id="btnBack" title="Back" aria-label="Back" tabindex="-1">↩</button>
+  </div>
+
+  <!-- Footer row INSIDE device -->
+  <div class="device-footer">
+    <img src="{{ url_for('static', filename='images/flipper-logo.jpg') }}" alt="FLIPPER" class="flipper-logo">
+  </div>
+</div>
+
+<script>
+const moduleName = "{{ module }}";
+const area = document.getElementById('content-area');
+
+/* ----------------- Back handler ----------------- */
+function handleBack(){
+  if (document.referrer && document.referrer.indexOf(location.host) !== -1) {
+    history.back();
+  } else {
+    location.href = "/flipper";
+  }
+}
+
+/* ----------------- Load module content ----------------- */
+async function loadModule() {
+
+  /* ------ RFID: in-screen puzzle ------ */
+  if (moduleName === 'rfid') {
+    const html = `
+      <div class="rfid-cols" style="display:flex;flex-direction:column;height:100%;">
+        <div class="rfid-left" style="flex:1; overflow:auto; padding-right:6px;">
+          <div class="rfid-step">
+            <div class="rfid-step-title">Step 1 — Main menu</div>
+            <div class="list-group" id="step1">
+              <button class="list-group-item list-group-item-action choice" data-step="1" data-value="modules">Modules</button>
+              <button class="list-group-item list-group-item-action choice" data-step="1" data-value="settings">Settings</button>
+              <button class="list-group-item list-group-item-action choice" data-step="1" data-value="apps">Apps</button>
+            </div>
+          </div>
+
+          <div class="rfid-step">
+            <div class="rfid-step-title">Step 2 — Select module</div>
+            <div class="list-group" id="step2">
+              <button class="list-group-item list-group-item-action choice" data-step="2" data-value="rfid">RFID</button>
+              <button class="list-group-item list-group-item-action choice" data-step="2" data-value="ir">IR</button>
+              <button class="list-group-item list-group-item-action choice" data-step="2" data-value="subghz">Sub-GHz</button>
+            </div>
+          </div>
+
+          <div class="rfid-step">
+            <div class="rfid-step-title">Step 3 — Frequency</div>
+            <div class="list-group" id="step3">
+              <button class="list-group-item list-group-item-action choice" data-step="3" data-value="125k">125 kHz</button>
+              <button class="list-group-item list-group-item-action choice" data-step="3" data-value="13.56m">13.56 MHz</button>
+              <button class="list-group-item list-group-item-action choice" data-step="3" data-value="other">Other</button>
+            </div>
+          </div>
+
+          <div class="rfid-step">
+            <div class="rfid-step-title">Step 4 — Action</div>
+            <div class="list-group" id="step4">
+              <button class="list-group-item list-group-item-action choice" data-step="4" data-value="read">Read</button>
+              <button class="list-group-item list-group-item-action choice" data-step="4" data-value="read_save">Read & Save</button>
+              <button class="list-group-item list-group-item-action choice" data-step="4" data-value="write">Write</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="rfid-bottom" style="border-top:1px solid rgba(11,74,184,0.12); margin-top:8px; padding-top:6px; display:flex; flex-direction:column; gap:6px; align-items:center;">
+          <div class="rfid-hint" style="font-size:11px; color:rgba(11,74,184,0.8);">Use ▲▼◀▶ + OK to choose each step.</div>
+          <div id="rfid-result" class="rfid-result" style="min-height:40px; text-align:center;"></div>
+        </div>
+      </div>
+    `;
+    area.innerHTML = html;
+
+    const selections = {1:null,2:null,3:null,4:null};
+    const resultBox = document.getElementById('rfid-result');
+
+    function updateResult(){
+      const correct = {1:'modules',2:'rfid',3:'125k',4:'read_save'};
+      resultBox.innerHTML = `<div style="font-size:13px;"><strong>Selected:</strong> ${selections[1]||'—'}, ${selections[2]||'—'}, ${selections[3]||'—'}, ${selections[4]||'—'}</div>`;
+      if (selections[1] && selections[2] && selections[3] && selections[4]) {
+        const ok = (selections[1]===correct[1] && selections[2]===correct[2] && selections[3]===correct[3] && (selections[4]==='read_save' || selections[4]==='read'));
+        if (ok) {
+          try { localStorage.setItem('storyStage','workstation'); } catch(e){}
+          resultBox.innerHTML = `
+            <div style="font-weight:800;color:#0b6623;font-size:20px;">ACCESS GRANTED</div>
+            <div style="margin-left:12px;color:#074;font-size:13px;">You chose the correct menu sequence.</div>
+            <div style="margin-top:8px;"><a class="btn btn-sm btn-primary" href="/flipper">Return to Main Menu</a></div>
+          `;
+        } else {
+          resultBox.innerHTML = `
+            <div style="font-weight:800;color:#9b1c1c;font-size:18px;">ACCESS DENIED</div>
+            <div style="margin-left:12px;font-size:13px;">That sequence did not work. Try again.</div>
+          `;
+        }
+      }
+    }
+
+    area.querySelectorAll('.choice').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const step = btn.getAttribute('data-step');
+        selections[step] = btn.getAttribute('data-value');
+        const group = document.getElementById('step'+step);
+        group.querySelectorAll('.list-group-item').forEach(it=>it.classList.remove('active'));
+        btn.classList.add('active');
+        updateResult();
+      });
+    });
+
+    return; // done for RFID
+  }
+
+  /* ------ Bad USB (simulated) — SAFE, educational only ------ */
+  else if (moduleName === 'badusb') {
+    const html = `
+      <div style="padding:8px;">
+        <h5>Bad USB (Simulated)</h5>
+        <p style="font-size:13px;color:#445;">This is a harmless simulation for learning UI/flow. No real keystrokes, payloads, or network code are executed.</p>
+
+        <div style="margin-top:12px;">
+          <label style="font-weight:600; font-size:13px;">Choose a simulated action</label>
+          <div class="list-group" id="demoList" style="margin-top:8px;">
+            <button class="list-group-item list-group-item-action demo" data-demo="notepad">Open Notepad &amp; type a message (simulated)</button>
+            <button class="list-group-item list-group-item-action demo" data-demo="browser">Open browser and visit a safe page (simulated)</button>
+            <button class="list-group-item list-group-item-action demo" data-demo="install_backdoor">Install (simulated) backdoor</button>
+            <button class="list-group-item list-group-item-action demo" data-demo="status">Show system info summary (simulated)</button>
+          </div>
+        </div>
+
+        <div id="demoResult" style="margin-top:12px; min-height:64px;"></div>
+      </div>
+    `;
+    area.innerHTML = html;
+
+    const demoResult = document.getElementById('demoResult');
+
+    area.querySelectorAll('.demo').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const which = btn.dataset.demo;
+        const layout = (document.getElementById('kbd')||{}).value || 'us'; // default if no selector
+
+        if (which === 'notepad'){
+          demoResult.innerHTML = `
+            <div style="padding:8px; border-radius:6px; background:#e6f4ea; color:#0b6623;">
+              <strong>Simulated:</strong> Would open a text editor and type “Hello from Flipper (layout: ${layout.toUpperCase()})”.
+            </div>
+          `;
+        } else if (which === 'browser'){
+          demoResult.innerHTML = `
+            <div style="padding:8px; border-radius:6px; background:#e8f0ff; color:#084877;">
+              <strong>Simulated:</strong> Would open a browser to a benign training page. No network activity in this simulation.
+            </div>
+          `;
+        } else if (which === 'status'){
+          demoResult.innerHTML = `
+            <div style="padding:8px; border-radius:6px; background:#f3f3f3; color:#333;">
+              <strong>Simulated:</strong> Would display a brief system info summary (harmless).
+            </div>
+          `;
+        } else if (which === 'install_backdoor'){
+          // Block or allow depending on current story stage
+          let currentStage = null;
+          try { currentStage = localStorage.getItem('storyStage'); } catch(e){ currentStage = null; }
+
+          if (currentStage === 'workstation' || currentStage === 'workstation_compromised') {
+            // SAFE UI-only behavior. No exploit code, no commands.
+            demoResult.innerHTML = `
+              <div style="padding:10px; border-radius:6px; background:#fdecea; color:#9b1c1c;">
+                <strong>BACKDOOR INSTALLED</strong><br>
+                This is a simulated result for training purposes only. No code was executed.
+              </div>
+              <div style="margin-top:8px;">
+                <button id="continueBtn" style="padding:6px 10px; border-radius:6px; background:#0b62d6; color:#fff; border:none;">Continue (advance story)</button>
+              </div>
+            `;
+            // Mark workstation as compromised (still Scene 2)
+            try { localStorage.setItem('storyStage','workstation_compromised'); } catch(e){}
+
+            // Hook continue button: only then advance to Scene 3 (elevator)
+            setTimeout(()=> {
+              const c = document.getElementById('continueBtn');
+              if (c) c.addEventListener('click', ()=>{
+                try { localStorage.setItem('storyStage','elevator'); } catch(e){}
+                location.href = '/flipper';
+              });
+            }, 80);
+          } else {
+            // Not allowed yet — must first complete RFID scene
+            demoResult.innerHTML = `
+              <div style="padding:10px; border-radius:6px; background:#fff4e5; color:#7a4b00;">
+                <strong>Action blocked:</strong><br>
+                ah ah ah you didn't say the magic word
+              </div>
+            `;
+          }
+        }
+      });
+    });
+
+    return; // done for badusb
+  }
+
+  /* ------ IR (unchanged) ------ */
+  else if (moduleName === 'ir') {
+    const res = await fetch('/api/ir/remotes').then(r=>r.json());
+    let html = '';
+    for(const key in res.remotes){
+      const remote = res.remotes[key];
+      html += `<div class="card mb-2"><div class="card-body"><h5>${remote.name}</h5>`;
+      for(const b in remote.buttons){
+        html += `<button class="btn btn-outline-secondary btn-sm me-1 mb-1" onclick="sendIR('${key}','${b}')">${b}</button>`;
+      }
+      html += `</div></div>`;
+    }
+    area.innerHTML = html;
+    return;
+  }
+
+  /* ------ GPIO (unchanged) ------ */
+  else if (moduleName === 'gpio') {
+    const res = await fetch('/api/gpio/state').then(r=>r.json());
+    let html = '<div class="row">';
+    for(const pin in res.gpio){
+      const val = res.gpio[pin];
+      html += `<div class="col-6 mb-2"><div class="card"><div class="card-body">
+        <h6>${pin}</h6><p class="mono">State: ${val}</p>
+        <button class="btn btn-sm btn-primary" onclick="toggleGPIO('${pin}', ${val})">Toggle</button>
+      </div></div></div>`;
+    }
+    html += '</div>';
+    area.innerHTML = html;
+    return;
+  }
+
+  /* ------ Sub-GHz (unchanged) ------ */
+  else if (moduleName === 'subghz') {
+    const res = await fetch('/api/subghz/scan').then(r=>r.json());
+    let html = '<ul class="list-group">';
+    for(const s of res.signals){
+      html += `<li class="list-group-item"><b>${s.protocol}</b> @ ${s.freq_mhz} MHz — ${s.desc}
+        <br><small>last_seen: ${s.last_seen || 'never'}</small>
+        <div class="mt-2"><a class="btn btn-sm btn-outline-info" href="/api/subghz/identify/${s.id}">Identify</a></div></li>`;
+    }
+    html += '</ul>';
+    area.innerHTML = html;
+    return;
+  }
+
+  /* ------ Bluetooth (unchanged) ------ */
+  else if (moduleName === 'bluetooth') {
+    const res = await fetch('/api/bt/scan').then(r=>r.json());
+    let html = '<ul class="list-group">';
+    for(const d of res.devices){
+      html += `<li class="list-group-item">${d.name} — ${d.addr} — RSSI: ${d.rssi} dBm</li>`;
+    }
+    html += '</ul>';
+    area.innerHTML = html;
+    return;
+  }
+
+  /* ------ Files (unchanged) ------ */
+  else if (moduleName === 'files') {
+    const res = await fetch('/api/files/list').then(r=>r.json());
+    let html = '<ul class="list-group">';
+    for(const f of res.files){
+      html += `<li class="list-group-item">${f.name} — ${f.size} bytes — uploaded: ${f.uploaded}</li>`;
+    }
+    html += `<div class="mt-3"><button class="btn btn-sm btn-success" onclick="uploadDemo()">Upload Demo File</button></div>`;
+    area.innerHTML = html;
+    return;
+  }
+
+  // default: empty
+  area.innerHTML = '<div style="color:#666; padding:8px;">Module not implemented.</div>';
+}
+
+/* ---- helpers for other modules ---- */
+async function sendIR(remote, btn){
+  const r = await fetch('/api/ir/send', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({remote, button:btn})}).then(r=>r.json());
+  alert('IR send simulated: ' + JSON.stringify(r.event));
+}
+async function toggleGPIO(pin, current){
+  await fetch('/api/gpio/write', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({pin, value: current ? 0 : 1})});
+  loadModule();
+}
+async function uploadDemo(){
+  const r = await fetch('/api/files/upload', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({name:'demo_payload.bin', size:256})}).then(r=>r.json());
+  alert('Uploaded: ' + r.file.name);
+  loadModule();
+}
+
+/* ---- init ---- */
+loadModule();
+
+/* ---- D-Pad/OK navigation (works for RFID .choice AND BadUSB .demo) ---- */
+(function dpadNavStepWrap(){
+  function getGroups(){
+    const lists = Array.from(area.querySelectorAll('.list-group'));
+    // accept both RFID choices and BadUSB demo items
+    return lists.map(list => Array.from(list.querySelectorAll('.choice, .demo')));
+  }
+
+  let groups = getGroups();
+  let g = 0; let i = 0;
+
+  function clampState(){
+    groups = getGroups();
+    if (!groups.length) return;
+    g = Math.max(0, Math.min(groups.length - 1, g));
+    i = Math.max(0, Math.min((groups[g]?.length || 1) - 1, i));
+  }
+
+  function clearFocus(){ groups.flat().forEach(btn => btn.classList.remove('active-focus')); }
+
+  function focusGI(gi, ii){
+    clampState();
+    clearFocus();
+    const btn = groups[gi]?.[ii];
+    if (btn){
+      btn.classList.add('active-focus');
+      btn.focus({preventScroll:true});
+      btn.scrollIntoView({behavior:'smooth', block:'nearest'});
+    }
+    g = gi; i = ii;
+  }
+
+  function moveWithin(delta){
+    clampState();
+    const n = groups[g]?.length || 0;
+    const next = i + delta;
+    if (next < 0 && g > 0) { focusGI(g - 1, (groups[g - 1]?.length || 1) - 1); return; }
+    if (next >= n && g < groups.length - 1) { focusGI(g + 1, 0); return; }
+    focusGI(g, Math.max(0, Math.min(n-1, next)));
+  }
+
+  function moveGroup(delta){
+    clampState();
+    const ng = Math.max(0, Math.min(groups.length - 1, g + delta));
+    const ni = Math.min(i, (groups[ng]?.length || 1) - 1);
+    focusGI(ng, ni);
+  }
+
+  function activate(){
+    clampState();
+    const btn = groups[g]?.[i];
+    if (btn) btn.click();
+  }
+
+  setTimeout(()=>{ groups = getGroups(); focusGI(0,0); }, 150);
+
+  const lock = new Set();
+  document.addEventListener('keydown', (e)=>{
+    const k = e.key;
+    if (!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter','Escape','Backspace'].includes(k)) return;
+    e.preventDefault();
+    if (lock.has(k)) return;
+    lock.add(k);
+    if (k==='ArrowUp') moveWithin(-1);
+    if (k==='ArrowDown') moveWithin(+1);
+    if (k==='ArrowLeft') moveGroup(-1);
+    if (k==='ArrowRight') moveGroup(+1);
+    if (k==='Enter') activate();
+    if (k==='Escape' || k==='Backspace') handleBack();
+  });
+  document.addEventListener('keyup', (e)=> lock.delete(e.key));
+
+  function btn(fn){ return (ev)=>{ ev.preventDefault(); clampState(); fn(); }; }
+  document.getElementById('btnUp').addEventListener('click',    btn(()=>moveWithin(-1)));
+  document.getElementById('btnDown').addEventListener('click',  btn(()=>moveWithin(+1)));
+  document.getElementById('btnLeft').addEventListener('click',  btn(()=>moveGroup(-1)));
+  document.getElementById('btnRight').addEventListener('click', btn(()=>moveGroup(+1)));
+  document.getElementById('okBtn').addEventListener('click',    btn(()=>activate()));
+  document.getElementById('btnBack').addEventListener('click',  btn(()=>handleBack()));
+})();
+
+</script>
+
+<style>
+.active-focus {
+  outline: 2px solid rgba(11,74,184,0.6);
+  box-shadow: 0 0 0 3px rgba(11,74,184,0.12);
+}
+.rfid-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 6px;
+}
+.rfid-result { min-height: 32px; text-align: center; }
+.rfid-hint { font-size: 12px; color: #2a4c7f; margin-bottom: 3px; }
+
+/* small styling for module UI inside the screen */
+.device-screen .card { border-radius:8px; padding:8px; }
+.list-group-item { cursor: pointer; padding:8px 10px; border-radius:6px; margin-bottom:6px; }
+.list-group-item.active, .list-group-item:focus, .list-group-item:hover { background: rgba(11,74,184,0.07); outline:none; }
+</style>
+
+{% endblock %}

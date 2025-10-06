@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block content %}
+
+<section class="hero" style="min-height:40vh;">
+  <h1>Room 8: The Magic Dolphin</h1>
+
+  <!-- Countdown badge -->
+  <div id="timerBadge" style="
+      margin-top:12px;
+      display:inline-block;
+      padding:8px 14px;
+      border:1px solid #0ff;
+      border-radius:999px;
+      color:#0ff;
+      background:rgba(0,255,255,.08);
+      font-weight:700;
+      letter-spacing:.5px;">
+    Time left: <span id="timeLeft">10:00</span>
+  </div>
+</section>
+
+<section class="rooms-preview" style="padding:32px;">
+  <div class="room-card" style="max-width:1200px;margin:0 auto;">
+    <h3 style="margin-bottom:10px;">The Scene</h3>
+    <p style="margin-bottom:18px;">You have 5 minutes before the cameras and security guards catch you.</br>
+    The owner of the company give you a free of jail card. You have it in your pocket, don't lose it</p>
+
+    <!-- Framed embed of the Flipper page -->
+    <div class="frame-card">
+      <div class="frame-card-bar">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+        <div class="frame-actions">
+        </div>
+      </div>
+      <div class="frame-wrap">
+        <iframe
+          src="{{ url_for('flipper') }}"
+          title="Flipper Zero Simulator"
+          loading="lazy"
+          referrerpolicy="no-referrer"
+          style="width:100%;height:820px;border:0;">
+        </iframe>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+/* Frame card styling (fits your cyan theme) */
+.frame-card{
+  border:1px solid #0ff3;
+  border-radius:14px;
+  background:linear-gradient(180deg, rgba(0,255,255,0.05), rgba(0,255,255,0.02));
+  box-shadow: 0 8px 30px rgba(0,255,255,0.07), inset 0 0 0 1px rgba(0,255,255,0.06);
+  overflow:hidden;
+}
+
+/* Title bar with traffic lights */
+.frame-card-bar{
+  display:flex; align-items:center; gap:8px;
+  padding:10px 12px;
+  border-bottom:1px solid #0ff2;
+  background:linear-gradient(180deg, rgba(0,255,255,0.08), rgba(0,255,255,0.03));
+}
+.frame-card-bar .dot{
+  width:10px; height:10px; border-radius:50%;
+  display:inline-block;
+  box-shadow: 0 0 8px currentColor;
+}
+.frame-card-bar .dot.red{    color:#ff6060; background:#ff6060; }
+.frame-card-bar .dot.yellow{ color:#ffcc66; background:#ffcc66; }
+.frame-card-bar .dot.green{  color:#66ffb2; background:#66ffb2; }
+
+.frame-card-bar .frame-actions{
+  margin-left:auto; display:flex; align-items:center;
+}
+.frame-card-bar .open-link{
+  color:#9ff; text-decoration:none; border:1px solid #0ff3;
+  padding:4px 8px; border-radius:8px; font-size:.85rem;
+}
+.frame-card-bar .open-link:hover{ border-color:#0ff8; color:#cff; }
+
+/* Keeps the iframe nicely sized; adjust min-height as needed */
+.frame-wrap{
+  width:100%;
+  /* was min-height:70vh; */
+  min-height: 200vh;         /* taller by default */
+  background:#04070c;
+}
+@media (max-width: 768px){
+  .frame-wrap{ min-height: 200vh; }  /* still generous on mobile */
+}
+</style>
+
+<!-- Countdown logic (5 minutes, persisted per tab) -->
+<script>
+(function () {
+  const TOTAL = 5 * 60; // seconds
+  const KEY = "room8_deadline_epoch_ms"; // unique to Room 8
+
+  // Set or read deadline
+  let deadline = sessionStorage.getItem(KEY);
+  if (!deadline) {
+    deadline = (Date.now() + TOTAL * 1000).toString();
+    sessionStorage.setItem(KEY, deadline);
+  }
+
+  const timeLeftEl = document.getElementById("timeLeft");
+  const badge = document.getElementById("timerBadge");
+  const homeUrl = "{{ url_for('index') }}";
+
+  function fmt(secs) {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+  }
+
+  function tick() {
+    const ms = parseInt(sessionStorage.getItem(KEY), 10) - Date.now();
+    const secs = Math.max(0, Math.floor(ms / 1000));
+    if (timeLeftEl) timeLeftEl.textContent = fmt(secs);
+
+    if (secs <= 60 && badge) {
+      badge.style.borderColor = "#ff5050";
+      badge.style.color = "#ff8080";
+      badge.style.background = "rgba(255,80,80,.08)";
+    }
+
+    if (secs <= 0) {
+      sessionStorage.removeItem(KEY);
+      window.location.replace(homeUrl);
+    }
+  }
+
+  tick();
+  const interval = setInterval(tick, 1000);
+  window.addEventListener("beforeunload", () => clearInterval(interval));
+})();
+</script>
+
+{% endblock %}

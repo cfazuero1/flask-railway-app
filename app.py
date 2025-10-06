@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, abort
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -15,6 +15,10 @@ from flask_login import login_required, current_user
 from flask import request, render_template, redirect, url_for, flash, session
 from flask import send_from_directory
 from config import ROOM4_FLAG, GRC_CONTROLS, GRC_POLICIES, INSIDERS_TRUE, INSIDERS_FP, WRONG_STORY, GENERIC_WRONG
+from datetime import datetime
+import uuid
+import random
+import time
 
 # === Load environment ===
 load_dotenv()
@@ -48,7 +52,39 @@ QUESTIONS = [
     "Custom…"
 ]
 
+# ---------------- In-memory state (SIMULATED) ----------------
+rfid_tags = [
+    {"id": "tag-1", "type": "MIFARE Classic", "uid": "04A224B7C1", "data": "Demo badge: User"},
+    {"id": "tag-2", "type": "NTAG215",        "uid": "04F3C3A112", "data": "Demo keycard: Guest"},
+]
 
+ir_remotes = {
+    "tv_demo": {
+        "name": "TV Demo Remote",
+        "buttons": {"POWER": "IR:0001:POWER", "VOL_UP": "IR:0001:VOL_UP", "VOL_DOWN": "IR:0001:VOL_DOWN", "CH_UP": "IR:0001:CH_UP"}
+    },
+    "ac_demo": {
+        "name": "AC Demo Remote",
+        "buttons": {"ON": "IR:1001:ON", "OFF": "IR:1001:OFF", "TEMP_UP": "IR:1001:TEMP_UP"}
+    }
+}
+
+gpio_state = {f"GPIO{n}": 0 for n in range(1, 9)}  # 8 pins (sim)
+
+subghz_known_signals = [
+    {"id": "sg-1", "protocol": "OOK", "freq_mhz": 433.92, "desc": "Simulated weather sensor tick", "last_seen": None},
+    {"id": "sg-2", "protocol": "FSK", "freq_mhz": 868.3,  "desc": "Simulated door sensor",          "last_seen": None},
+]
+
+bt_devices = [
+    {"id": "bt-1", "name": "Demo-Phone",     "addr": "AA:BB:CC:DD:EE:01", "rssi": -42},
+    {"id": "bt-2", "name": "Heart-Rate-Sim", "addr": "AA:BB:CC:DD:EE:02", "rssi": -68},
+]
+
+file_store = [
+    {"id": "f1", "name": "rfid_demo.bin",    "size": 128, "uploaded": "2025-09-30T09:00:00Z"},
+    {"id": "f2", "name": "ir_tv_remote.json","size": 64,  "uploaded": "2025-09-30T09:05:00Z"},
+]
 
 # reCAPTCHA
 RECAPTCHA_SITE_KEY = os.getenv("RECAPTCHA_SITE_KEY")
@@ -538,6 +574,11 @@ def room3_verify():
     submitted = (data.get("flag") or "").strip()
     return jsonify({"ok": submitted == FLAG1})
 
+# --- Room 8: Room 8: The Magic Dolphin ---
+@app.route('/room8')
+def room8():
+    return render_template('room8.html')
+
 # --- Room 4: The Governance Labyrinth (GRC) ---
 
 @app.route("/room4", methods=["GET", "POST"])
@@ -603,6 +644,135 @@ def room4():
         room4_flag=ROOM4_FLAG,
     )
 
+def _simulate_subghz_activity():
+    while True:
+        time.sleep(8)
+        s = random.choice(subghz_known_signals)
+        s["last_seen"] = datetime.utcnow().isoformat() + "Z"
+
+threading.Thread(target=_simulate_subghz_activity, daemon=True).start()
+
+# ---------------- Pages ----------------
+@app.route("/flipper")
+def flipper():
+    modules = [
+        {"key": "rfid",      "name": "RFID"},
+        {"key": "ir",        "name": "IR Remote"},
+        {"key": "gpio",      "name": "GPIO"},
+        {"key": "subghz",    "name": "Sub-GHz (sim)"},
+        {"key": "bluetooth", "name": "Bluetooth (sim)"},
+        {"key": "badusb",    "name": "Bad USB (sim)"},
+    ]
+    return render_template("flipper.html", modules=modules)
+
+@app.route("/module/<mod>")
+def module_page(mod):
+    if mod not in {"rfid","ir","gpio","subghz","bluetooth","badusb"}:
+        abort(404)
+    return render_template("module.html", module=mod)
+
+# ---------------- API: RFID ----------------
+@app.route("/api/rfid/list")
+def api_rfid_list():
+    return jsonify({"tags": rfid_tags})
+
+@app.route("/api/rfid/read/<tag_id>")
+def api_rfid_read(tag_id):
+    tag = next((t for t in rfid_tags if t["id"] == tag_id), None)
+    if not tag:
+        return jsonify({"error": "Tag not found"}), 404
+    return jsonify({"tag": tag})
+
+@app.route("/api/rfid/write", methods=["POST"])
+def api_rfid_write():
+    payload = request.json or {}
+    uid = payload.get("uid", uuid.uuid4().hex[:10].upper())
+    new_id = f"tag-{len(rfid_tags)+1}"
+    tag = {
+        "id": new_id,
+        "type": payload.get("type", "NTAG215"),
+        "uid": uid,
+        "data": payload.get("data", "Created from API")
+    }
+    rfid_tags.append(tag)
+    return jsonify({"result": "ok", "tag": tag})
+
+# ---------------- API: IR ----------------
+@app.route("/api/ir/remotes")
+def api_ir_remotes():
+    return jsonify({"remotes": ir_remotes})
+
+@app.route("/api/ir/send", methods=["POST"])
+def api_ir_send():
+    payload = request.json or {}
+    remote = payload.get("remote")
+    button = payload.get("button")
+    if remote not in ir_remotes:
+        return jsonify({"error": "Remote not found"}), 404
+    if button not in ir_remotes[remote]["buttons"]:
+        return jsonify({"error": "Button not found"}), 404
+    signal = ir_remotes[remote]["buttons"][button]
+    event = {"time": datetime.utcnow().isoformat()+"Z", "remote": remote, "button": button, "signal": signal, "status": "simulated_send"}
+    return jsonify({"result": "simulated", "event": event})
+
+# ---------------- API: GPIO ----------------
+@app.route("/api/gpio/state")
+def api_gpio_state():
+    return jsonify({"gpio": gpio_state})
+
+@app.route("/api/gpio/write", methods=["POST"])
+def api_gpio_write():
+    payload = request.json or {}
+    pin = payload.get("pin")
+    value = payload.get("value")
+    if pin not in gpio_state:
+        return jsonify({"error": "Pin not found"}), 404
+    gpio_state[pin] = 1 if value else 0
+    return jsonify({"result": "ok", "gpio": gpio_state})
+
+# ---------------- API: Sub-GHz (sim) ----------------
+@app.route("/api/subghz/scan")
+def api_subghz_scan():
+    return jsonify({"signals": subghz_known_signals})
+
+@app.route("/api/subghz/identify/<sig_id>")
+def api_subghz_identify(sig_id):
+    s = next((x for x in subghz_known_signals if x["id"] == sig_id), None)
+    if not s:
+        return jsonify({"error": "signal not found"}), 404
+    return jsonify({"signal": s})
+
+# ---------------- API: Bluetooth (sim) ----------------
+@app.route("/api/bt/scan")
+def api_bt_scan():
+    for d in bt_devices:
+        d["rssi"] = -30 - random.randint(10, 80)
+    return jsonify({"devices": bt_devices})
+
+# ---------------- API: Files ----------------
+@app.route("/api/files/list")
+def api_files_list():
+    return jsonify({"files": file_store})
+
+@app.route("/api/files/upload", methods=["POST"])
+def api_files_upload():
+    payload = request.json or {}
+    name = payload.get("name", f"file-{uuid.uuid4().hex[:6]}.bin")
+    size = payload.get("size", random.randint(16, 4096))
+    item = {"id": f"f{len(file_store)+1}", "name": name, "size": size, "uploaded": datetime.utcnow().isoformat()+"Z"}
+    file_store.append(item)
+    return jsonify({"result": "ok", "file": item})
+
+# ---------------- Misc ----------------
+@app.route("/api/status")
+def api_status():
+    return jsonify({"status": "running", "time": datetime.utcnow().isoformat()+"Z"})
+
+@app.route("/api/safety")
+def api_safety():
+    return jsonify({
+        "notice": "Simulator for educational/testing only. No real RF/IR/Bluetooth transmissions or access bypass."
+    })
 
 if __name__ == "__main__":
     with app.app_context():

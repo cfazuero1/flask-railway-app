@@ -1,0 +1,296 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="flipper-page"><!-- NEW wrapper makes content stack vertically -->
+
+  <!-- STORY (top, outside the device) -->
+  <div id="storyBanner" style="max-width:1100px;margin:20px auto 15px auto;">
+    <!-- Default: Scene 1 (will be replaced by JS if stage advanced) -->
+    <div style="background: linear-gradient(180deg, rgba(11,74,184,0.10), rgba(11,74,184,0.05));
+                border:1px solid rgba(11,74,184,0.18);
+                border-radius:10px; padding:16px; color:#063a6b;">
+      <strong style="font-size:16px;display:block;margin-bottom:6px;">
+        Hacker Escape Room – Chinedu’s Daytime Infiltration
+      </strong>
+      <em style="display:block;margin-bottom:10px;color:#0b5aa0;">Scene 1 – Watching the Gate</em>
+      <p style="margin:0 0 8px 0;line-height:1.55;font-size:14px;color:#084877;">
+        For a week, Chinedu Okoro, the Pentest Phantom, watched Kestrel Biotech employees come and go.
+        His spy camera captured every badge swipe, every careless moment. But today is different. Today, he moves.
+        He powers on his Flipper Zero. The screen glows.
+
+        An employee approaches the turnstile, juggling a steaming coffee cup and a heavy messenger bag. In his other hand, the access card dangles loosely.
+        Chinedu seizes the moment.
+        With a subtle shoulder bump, he “accidentally” collides.
+        The card slips from the employee’s hand and tumbles to the pavement.
+        “Oh man, I’m so sorry!” Chinedu blurts, crouching quickly.
+        In that instant, the badge brushes against the hidden Flipper Zero under his sleeve.
+      </p>
+      <p style="margin:8px 0 0 0;font-weight:700;color:#0b4ab8;">
+        Choose the correct menu sequence on the Flipper
+      </p>
+    </div>
+    <div style="text-align:right;margin-top:6px;">
+      
+    </div>
+  </div>
+
+  <!-- DEVICE (below the story) -->
+  <div class="device-area">
+    <div class="device-shell-wide">
+      <!-- LEFT: Screen -->
+      <div class="device-screen">
+        <div class="screen-inner">
+          <h3>MODULES</h3>
+          <div id="moduleGrid" class="module-grid">
+            {% for m in modules %}
+            <div class="module-card" tabindex="0" data-index="{{ loop.index0 }}" data-href="/module/{{ m.key }}">
+              <div class="module-title">{{ m.name }}</div>
+              <div class="module-sub">Simulated • UI</div>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="screen-note">Note: visual only — no RF/IR transmissions.</div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Controls -->
+      <div class="device-controls-side">
+        <div class="circle-pad" aria-label="Directional pad">
+          <button class="ok-btn" id="okBtn" aria-label="OK" tabindex="-1">OK</button>
+          <button class="arrow up" id="btnUp" aria-label="Up" tabindex="-1">▲</button>
+          <button class="arrow left" id="btnLeft" aria-label="Left" tabindex="-1">◀</button>
+          <button class="arrow right" id="btnRight" aria-label="Right" tabindex="-1">▶</button>
+          <button class="arrow down" id="btnDown" aria-label="Down" tabindex="-1">▼</button>
+        </div>
+        <button class="btn-back" id="btnBack" title="Back" aria-label="Back" tabindex="-1">↩</button>
+      </div>
+
+      <!-- Footer row INSIDE device -->
+      <div class="device-footer">
+        <img src="{{ url_for('static', filename='images/flipper-logo.jpg') }}" alt="FLIPPER" class="flipper-logo">
+      </div>
+    </div>
+  </div>
+
+</div><!-- /flipper-page -->
+
+<script>
+/* ---------- Story Banner: switch scenes based on localStorage.storyStage ---------- */
+(function(){
+  const banner = document.getElementById('storyBanner');
+
+  function scene1HTML(){
+    return `
+      <div style="background: linear-gradient(180deg, rgba(11,74,184,0.10), rgba(11,74,184,0.05));
+                  border:1px solid rgba(11,74,184,0.18);
+                  border-radius:10px; padding:16px; color:#063a6b;">
+        <strong style="font-size:16px;display:block;margin-bottom:6px;">
+          Hacker Escape Room – Chinedu’s Daytime Infiltration
+        </strong>
+        <em style="display:block;margin-bottom:10px;color:#0b5aa0;">Scene 1 – Watching the Gate</em>
+        <p style="margin:0 0 8px 0;line-height:1.55;font-size:14px;color:#084877;">
+        Chinedu Okoro, an ethical hacker, was hired to text the security of the company Kestrel Biotech.
+        </br>
+        For a week, Chinedu Okoro, the Pentest Phantom, watched Kestrel Biotech employees come and go.
+        He noticed the card reader is an old HID Prox that the employees used to access the building.
+        His spy camera captured every badge swipe, every careless moment. But today is different. Today, he moves.
+        He powers on his Flipper Zero. The screen glows.
+        </br>
+        An employee approaches the turnstile, juggling a steaming coffee cup and a heavy messenger bag. In his other hand, the access card dangles loosely.
+        Chinedu seizes the moment.
+        </br>
+        With a subtle shoulder bump, he “accidentally” collides.
+        The card slips from the employee’s hand and tumbles to the pavement.
+        “Oh man, I’m so sorry!” Chinedu blurts, crouching quickly.
+        </br>
+        In that instant, the badge brushes against the hidden Flipper Zero under his sleeve.
+        What should I do now?
+        </p>
+      </div>
+      <div style="text-align:right;margin-top:6px;">
+        
+      </div>
+    `;
+  }
+
+  function scene2HTML(compromised){
+    const extra = compromised
+      ? `<p style="margin:6px 0 0 0; font-size:13px; color:#0b3c7a;">
+           Tip: You unlocked simulated workstation access. Explore modules or proceed when ready.
+         </p>`
+      : `<p style="margin:6px 0 0 0; font-size:13px; color:#0b3c7a;">
+           Try the <em>Bad USB (sim)</em> module to continue (harmless demo).
+         </p>`;
+    return `
+      <div style="background: linear-gradient(180deg, rgba(11,74,184,0.10), rgba(11,74,184,0.05));
+                  border:1px solid rgba(11,74,184,0.18);
+                  border-radius:10px; padding:16px; color:#063a6b;">
+        <strong style="font-size:16px;display:block;margin-bottom:6px;">
+          Hacker Escape Room – Chinedu’s Daytime Infiltration
+        </strong>
+        <em style="display:block;margin-bottom:10px;color:#0b5aa0;">Scene 2 – The Workstation</em>
+        <p style="margin:0 0 8px 0;line-height:1.55;font-size:14px;color:#084877;">
+          Chinedu hands the card back, apologizing again. The employee, more worried about spilled coffee than the stranger’s clumsiness, shrugs it off and enters the building.
+          </br>
+          Minutes later, Chinedu approaches the same reader.
+          The Flipper Zero emulates the stolen card.
+          Beep. The door unlocks.
+          He slips inside, blending into the flow of employees.
+          </br>
+          Deeper in the building, the hallway is quiet. On a desk sits an unattended workstation, screen still glowing.
+          It displays the Kestrel Biotech Windows Login. Pinned to the bezel is a yellow sticky note with the username and password.
+          Chinedu logs in and connects his Flipper Zero to the machine.
+        </p>
+        
+      </div>
+      <div style="text-align:right;margin-top:6px;">
+      
+      </div>
+    `;
+  }
+
+  function scene3HTML(){
+    return `
+      <div style="background: linear-gradient(180deg, rgba(11,74,184,0.10), rgba(11,74,184,0.05));
+                  border:1px solid rgba(11,74,184,0.18);
+                  border-radius:10px; padding:16px; color:#063a6b;">
+        <strong style="font-size:16px;display:block;margin-bottom:6px;">
+          Hacker Escape Room – Chinedu’s Daytime Infiltration
+        </strong>
+        <em style="display:block;margin-bottom:10px;color:#0b5aa0;">Scene 3 – Elevator to 66th</em>
+        <p style="margin:0 0 8px 0;line-height:1.55;font-size:14px;color:#084877;">
+          The script executes, starts installing Netcat, and connects to the command-and-control (C2) server on a cloud VM.</br>
+          The backdoor provides hands-on-keyboard access and enables lateral movement.</br>
+          The elevator doors slide open with a hush. The panel flickers to life <strong>66</strong> is now available.
+          He can advance to the sixty-sixth floor.
+        </p>
+        <img src="{{ url_for('static', filename='images/elevator_open.jpg') }}"
+             alt="Elevator doors opening"
+             style="width:100%;max-height:260px;object-fit:cover;border-radius:8px;margin-top:8px;">
+             <p>FLAG{7860496e8189460a264ced7feb924bbc3448cd1200c764d205c5f143d45f0fbe}</p>
+      </div>
+      <div style="text-align:right;margin-top:6px;">
+       
+      </div>
+    `;
+  }
+
+  function renderStory(){
+    let stage = null;
+    try { stage = localStorage.getItem('storyStage'); } catch(e){}
+
+    if (stage === 'elevator') {
+      banner.innerHTML = scene3HTML();
+    } else if (stage === 'workstation' || stage === 'workstation_compromised') {
+      banner.innerHTML = scene2HTML(stage === 'workstation_compromised');
+    } else {
+      banner.innerHTML = scene1HTML();
+    }
+
+    // bind reset link
+    const reset = document.getElementById('resetStory');
+    if (reset) {
+      reset.addEventListener('click', (e)=>{
+        e.preventDefault();
+        try { localStorage.removeItem('storyStage'); } catch(e){}
+        renderStory();
+      });
+    }
+  }
+
+  // Render on load
+  document.addEventListener('DOMContentLoaded', renderStory);
+  // Also render immediately if DOM is already ready
+  if (document.readyState === 'interactive' || document.readyState === 'complete') renderStory();
+})();
+</script>
+
+<script>
+/* -------- Grid navigation with debounced keys + safe activation -------- */
+const cards = Array.from(document.querySelectorAll('.module-card'));
+const cols = 2;
+let index = 0;
+
+// ----- helpers -----
+const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+function focusIndex(i){
+  index = clamp(i, 0, cards.length - 1);
+  cards.forEach((c, j) => c.classList.toggle('selected', j === index));
+  // keep focus on the tile (not on buttons)
+  cards[index].focus({preventScroll:true});
+}
+function edgeBlocked(dir, i){
+  // prevent wrapping across rows with left/right
+  if (dir === 'left'  && i % cols === 0) return true;
+  if (dir === 'right' && (i % cols === cols - 1 || i + 1 >= cards.length)) return true;
+  return false;
+}
+function move(dir){
+  let next = index;
+  if (dir === 'left'  && !edgeBlocked('left', index))  next = index - 1;
+  if (dir === 'right' && !edgeBlocked('right', index)) next = index + 1;
+  if (dir === 'up')   next = index - cols;
+  if (dir === 'down') next = index + cols;
+  focusIndex(next);
+}
+function activeHref(){
+  // prefer the focused tile if any
+  const el = document.activeElement;
+  const card = el && el.classList && el.classList.contains('module-card')
+    ? el
+    : cards[index];
+  return card?.dataset?.href || null;
+}
+function activate(){
+  const href = activeHref();
+  if (href) location.href = href;
+}
+function goBack(){
+  if (document.referrer && document.referrer.indexOf(location.host) !== -1) {
+    history.back();
+  }
+}
+
+// ----- keyboard: debounce auto-repeat -----
+const keyLock = new Set(); // holds pressed keys until keyup
+function handleKey(k){
+  if (keyLock.has(k)) return;     // ignore repeats while held
+  keyLock.add(k);
+
+  if (k === 'ArrowLeft')  move('left');
+  else if (k === 'ArrowRight') move('right');
+  else if (k === 'ArrowUp')    move('up');
+  else if (k === 'ArrowDown')  move('down');
+  else if (k === 'Enter')      activate();
+  else if (k === 'Escape' || k === 'Backspace') goBack();
+}
+
+document.addEventListener('keydown', (e) => {
+  const k = e.key;
+  if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Enter','Escape','Backspace'].includes(k)) {
+    e.preventDefault();
+    handleKey(k);
+  }
+});
+document.addEventListener('keyup', (e) => {
+  keyLock.delete(e.key);
+});
+
+// ----- on-screen D-Pad: prevent default, keep focus on tiles -----
+function btn(fn){
+  return (e) => { e.preventDefault(); fn(); cards[index].focus({preventScroll:true}); };
+}
+document.getElementById('btnLeft').addEventListener('click',  btn(()=>move('left')));
+document.getElementById('btnRight').addEventListener('click', btn(()=>move('right')));
+document.getElementById('btnUp').addEventListener('click',    btn(()=>move('up')));
+document.getElementById('btnDown').addEventListener('click',  btn(()=>move('down')));
+document.getElementById('okBtn').addEventListener('click',    btn(activate));
+document.getElementById('btnBack').addEventListener('click',  btn(goBack));
+
+// mouse click still works (select then activate)
+cards.forEach((c, i) => c.addEventListener('click', (e) => { e.preventDefault(); focusIndex(i); activate(); }));
+
+// initial focus
+focusIndex(0);
+</script>
+{% endblock %}
